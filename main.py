@@ -41,7 +41,7 @@ def addUser(userId, handling):
     cur.execute(f'''
         INSERT
         INTO "{USER_MASTER}" (userId, handling)
-        VALUES ({userId}, {handling})
+        VALUES ("{userId}", "{handling}")
     ''')
     con.commit()
     con.close()
@@ -70,6 +70,7 @@ class RegisterUser(View):
         if self.disabled or (not interaction.user.id == user.id):
             return
         self.disabled = True
+        addUser(user.id, self.arg[0])
         embed = discord.Embed(
             title = "✅ 가입 완료 ✅",
             description = '가입 성공! 응원하겠습니다!',
@@ -135,7 +136,7 @@ async def 가입(ctx, *arg):
     else:
         embed = discord.Embed(
             title = "⚠️ 가입 실패 ⚠️",
-            description='등록되지 않은 유저입니다!',
+            description='이미 가입되어 있는 유저입니다!',
             color = 0xed2b2a
         )
         await ctx.send(embed = embed)
