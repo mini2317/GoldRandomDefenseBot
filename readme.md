@@ -6,7 +6,7 @@
 - discord
 - emoji
 
-**다음 파일이 필요합니다.**  
-data  
-- token.txt  
-- users.db
+**해당 폴더 내에 해당 이름의 파일이 필요합니다.**  
+- data  
+&nbsp;&nbsp; ㄴ token.txt  
+&nbsp;&nbsp; ㄴ users.db
