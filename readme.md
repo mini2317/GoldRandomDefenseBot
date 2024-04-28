@@ -5,7 +5,7 @@
 **다음 라이브러리가 필요합니다.**
 - discord
 - emoji  
-
+  
 **해당 폴더 내에 해당 이름의 파일이 필요합니다.**  
 - data  
 &nbsp; ㄴ token.txt  

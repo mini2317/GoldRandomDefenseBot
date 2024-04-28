@@ -17,7 +17,7 @@ con = sqlite3.connect(DATABASE_PATH)
 cur = con.cursor()
 tableExist = cur.execute(f"SELECT name FROM sqlite_master WHERE type='table';").fetchall()
 if not any(map(lambda x : x[0] == USER_MASTER or USER_MASTER == f"'{x[0]}'", tableExist)):
-    cur.execute(f'''CREATE TABLE {USER_MASTER} (userId INT)''')
+    cur.execute(f'''CREATE TABLE {USER_MASTER} (userId INT, handling TEXT)''')
 con.commit()
 con.close()
 
@@ -34,6 +34,17 @@ def getUser(userId):
     con.commit()
     con.close()
     return search
+
+def addUser(userId, handling):
+    con = sqlite3.connect(DATABASE_PATH)
+    cur = con.cursor()
+    cur.execute(f'''
+        INSERT
+        INTO "{USER_MASTER}" (userId, handling)
+        VALUES ({userId}, {handling})
+    ''')
+    con.commit()
+    con.close()
 
 def deleteUser(userId):
     con = sqlite3.connect(DATABASE_PATH)
