@@ -6,7 +6,7 @@
 - discord
 - emoji
 
-**다음 파일이 필요합니다.**
+**다음 파일이 필요합니다.**  
 data  
-  ㄴ token.txt  
-  ㄴ users.db
+- token.txt  
+- users.db
