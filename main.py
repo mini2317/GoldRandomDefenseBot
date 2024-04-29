@@ -7,20 +7,19 @@ bot = commands.Bot(command_prefix='ㄱ', intents = discord.Intents.all())
 bot.remove_command('help')
 initializeDataBase()
 
-async def alertToGuilds():
+async def alertToGuilds(problemId):
     for guild in bot.guilds:
         if getGuild(guild.id) is None:
             for channel in guild.channels:
                 if channel.type == discord.ChannelType.text:
-                    print(channel.name)
                     addGuild(guild.id, channel.id)
                     break
-        nowGuild = getGuild(guild.id)
-        testChannel = bot.get_guild(guild.id).get_channel(nowGuild[1])
-        embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"https://www.acmicpc.net/problem/1790")
-        embed.set_thumbnail(url = FHBT_IMAGE)
-        await testChannel.send(embed = embed)
-
+        if getGuild(guild.id)[2]:
+            nowGuild = getGuild(guild.id)
+            testChannel = bot.get_guild(guild.id).get_channel(nowGuild[1])
+            embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"https://www.acmicpc.net/problem/{problemId}")
+            embed.set_thumbnail(url = FHBT_IMAGE)
+            await testChannel.send(embed = embed)
 
 class RegisterUser(View):
     def __init__(self, ctx, arg):
@@ -74,11 +73,12 @@ async def on_ready():
     print('------')
     if not alertEveryday.is_running():
         alertEveryday.start()
-    await alertToGuilds()
     await bot.change_presence(activity = discord.Game(name = "ㄱ도움"))
 
 @bot.command()
 async def 핑(ctx):
+    idx, problemId = getRandomProblem()
+    await alertToGuilds(problemId)
     await ctx.send(f'``{bot.latency * 1000}ms``')
 
 @bot.command(name = "도움")
@@ -127,7 +127,7 @@ async def 탈퇴(ctx, *arg):
         )
         await ctx.send(embed = embed)
 
-@bot.command(name = "알림 채널 설정")
+@bot.command(name = "알림")
 async def 알림(ctx, *arg):
     if not arg: 
         embed = discord.Embed(title = f"알림 커맨드 사용법", description = "ㄱ알림 채널 <채널>\nㄱ알림 끄기\nㄱ알림 켜기", color = 0xffbf00)
@@ -137,23 +137,45 @@ async def 알림(ctx, *arg):
         embed = discord.Embed(title = f"알림 채널 커맨드 사용법", description = "ㄱ알림 채널 <채널>", color = 0xffbf00)
         await ctx.send(embed = embed)
         return
-    if arg[0] == "끄기":
-        
+    if arg[0] in ["끄기", "켜기"]:
+        if getGuild(ctx.guild.id) is None:
+            for channel in ctx.guild.channels:
+                if channel.type == discord.ChannelType.text:
+                    addGuild(ctx.guild.id, channel.id)
+                    break
+        if arg[0] == "켜기":
+            turnOnGuildNotion(ctx.guild.id)
+        else:
+            turnOffGuildNotion(ctx.guild.id)
+        if arg[0] == "켜기":
+            embed = discord.Embed(title = f"이 서버에서 봇의 알림을 켰습니다!", description = "이제 이 서버에 알림을 보내드립니다!", color = 0xffbf00)
+        else:
+            embed = discord.Embed(title = f"이 서버에서 봇의 알림을 껐습니다!", description = "더 이상 이 서버에는 알림을 보내지 않습니다!", color = 0xffbf00)
         await ctx.send(embed = embed)
         return
-    if ctx.author.id:
-        embed = discord.Embed(
-            title = f"🔔 가입 🔔",
-            description = "가입해서 매일 나오는 무작위 문제들을 풀어보세요!",
-            color = 0xffbf00
-        )
-        await ctx.send(embed = embed, view = RegisterUser(ctx, arg))
-    else:
-        embed = discord.Embed(
-            title = "⚠️ 가입 실패 ⚠️",
-            description='이미 가입되어 있는 유저입니다!',
-            color = 0xed2b2a
-        )
+    if arg[0] == "채널":
+        if getGuild(ctx.guild.id) is None:
+            for channel in ctx.guild.channels:
+                if channel.type == discord.ChannelType.text:
+                    addGuild(ctx.guild.id, channel.id)
+                    break
+        if len(arg[1]) < 4:
+            embed = discord.Embed(title = f"⚠️ 유효하지 않은 채널입니다. ⚠️", description = "확인 부탁드립니다.", color = discord.Color.red())
+            await ctx.send(embed = embed)
+            return
+        try:
+            channelId = int(arg[1][2:-1])
+        except:
+            embed = discord.Embed(title = f"⚠️ 유효하지 않은 채널입니다. ⚠️", description = "확인 부탁드립니다.", color = discord.Color.red())
+            await ctx.send(embed = embed)
+            return
+        for channel in ctx.guild.channels:
+            if channel.id == channelId:
+                changeGuildNotionChannel(ctx.guild.id, channelId)
+                embed = discord.Embed(title = f"알림 채널을 변경하였습니다!", description = f"{arg[1]} 에 알림을 보냅니다!", color = 0xffbf00)
+                break
+        else:
+            embed = discord.Embed(title = f"⚠️ 해당 채널은 존재하지 않습니다. ⚠️", description = "확인 부탁드립니다.", color = discord.Color.red())
         await ctx.send(embed = embed)
 
 @tasks.loop(seconds = 1)
@@ -162,13 +184,9 @@ async def alertEveryday():
     hour = now.hour
     minute = now.minute
     second = now.second
-    tester = second % 3 == -1
+    tester = second % 10 == -1
     if tester or second + minute + hour == 0:
-        testChannel = bot.get_guild(1148512256246693888).get_channel(1175423530054201364)
-        embed = discord.Embed(title = "푸하하", description = f"오늘의 골드 문제입니다!")
-        embed.set_thumbnail(url = FHBT_IMAGE)
-        await testChannel.send(embed = embed)
-    if second  == -1:
-        pass
+        idx, problemId = getRandomProblem()
+        await alertToGuilds(problemId)
 
 bot.run(TOKEN)
