@@ -3,3 +3,4 @@ Lib
 Include
 Scripts
 pyvenv.cfg
+__pycache__
