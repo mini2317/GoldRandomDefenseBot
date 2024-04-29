@@ -17,7 +17,7 @@ async def alertToGuilds(problemId, tier):
         if getGuild(guild.id)[0][2]:
             nowGuild = getGuild(guild.id)[0]
             testChannel = bot.get_guild(guild.id).get_channel(nowGuild[1])
-            embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"https://www.acmicpc.net/problem/{problemId}")
+            embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"https://www.acmicpc.net/problem/{problemId}", color = GOLD_COLOR)
             embed.set_thumbnail(url = GOLD_IMAGE[tier])
             await testChannel.send(embed = embed)
 
@@ -76,14 +76,14 @@ async def on_ready():
     await bot.change_presence(activity = discord.Game(name = "ㄱ도움"))
 
 @bot.command()
+async def 핑(ctx):
+    await ctx.send(f'``{bot.latency * 1000}ms``')
+
+@bot.command()
 async def 테스트(ctx):
     if ctx.author.id in BOT_OWNERS_ID:
         problemId, tier = getRandomProblem()
         await alertToGuilds(problemId, tier)
-
-@bot.command()
-async def 핑(ctx):
-    await ctx.send(f'``{bot.latency * 1000}ms``')
 
 @bot.command()
 async def 재구성(ctx):
