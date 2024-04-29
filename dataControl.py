@@ -5,12 +5,31 @@ USER_MASTER = "UserMaster"
 GUILD_MASTER = "GuildMaster"
 PROBLEM_LOCAL_SRC = "ProblemLocalSource"
 PROBLEMS_JSON_PATH = os.path.join('.','data','problems.json')
-
 TOKEN_PATH = os.path.join('.','data','token.txt')
+BOT_OWNER_ID_PATH = os.path.join('.','data','botOwnerId.txt')
+
+GOLD_COLOR = 0xec9a00
+GOLD_5_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465905854120016/11.png?ex=6630d577&is=662f83f7&hm=021e5322d9965a3929696a1347d0d1312962099f4d342da3db84d4ed9f04f075&=&format=webp&quality=lossless&width=600&height=768"
+GOLD_4_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465906071961641/12.png?ex=6630d577&is=662f83f7&hm=409b10d43449679465ed815809bc2c9ba7e07782e78247d1e121bf3c96feb951&=&format=webp&quality=lossless&width=600&height=768"
+GOLD_3_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465906269225052/13.png?ex=6630d577&is=662f83f7&hm=5ffaff84f3ed31864a53a285f71f7545debecd20d5e8d7981f4f42a3e1f9e2c4&=&format=webp&quality=lossless&width=600&height=768"
+GOLD_2_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465906500042782/14.png?ex=6630d577&is=662f83f7&hm=2c1086b6f9ea1d494f45d488cec340845395c1b3a2220a4747a3ed4d41d040dd&=&format=webp&quality=lossless&width=600&height=768"
+GOLD_1_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465906722078742/15.png?ex=6630d577&is=662f83f7&hm=ee42b9ef6438bf38b899709a5c9cfc6a7ac7f807fa054d034031657368510417&=&format=webp&quality=lossless&width=600&height=768"
+
+GOLD_IMAGE = [
+    GOLD_1_IMAGE,
+    GOLD_2_IMAGE,
+    GOLD_3_IMAGE,
+    GOLD_4_IMAGE,
+    GOLD_5_IMAGE
+]
+
 FHBT_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1177105955545153636/face-holding-back-tears.png?ex=65714c59&is=655ed759&hm=ca7484f164beebf32a17f252fd430b5c1df05731899379ecff0fe92bfcb2f738&=&format=webp&width=360&height=360"
 
 with open(TOKEN_PATH, 'r', encoding = "UTF-8") as file:
     TOKEN = file.read()
+
+with open(BOT_OWNER_ID_PATH, 'r', encoding = "UTF-8") as file:
+    BOT_OWNER_ID = int(file.read())
 
 def getFromJson(jsonFilePath):
     with open(jsonFilePath, 'r', encoding = "UTF-8") as file: 
@@ -41,7 +60,7 @@ def initializeDataBase():
     if not any(map(lambda x : x[0] == GUILD_MASTER or GUILD_MASTER == f"'{x[0]}'", tableExist)):
         cur.execute(f'''CREATE TABLE {GUILD_MASTER} (guildId INT, channelId INT, canNotion INT)''')
     if not any(map(lambda x : x[0] == PROBLEM_LOCAL_SRC or PROBLEM_LOCAL_SRC == f"'{x[0]}'", tableExist)):
-        cur.execute(f'''CREATE TABLE {PROBLEM_LOCAL_SRC} (problemId INT)''')
+        cur.execute(f'''CREATE TABLE {PROBLEM_LOCAL_SRC} (problemId INT, problemTier INT)''')
     con.commit()
     con.close()
 
@@ -86,7 +105,7 @@ def getGuild(guildId):
         SELECT *
         FROM "{GUILD_MASTER}"
         WHERE guildId = {guildId};
-    ''').fetchall()[0]
+    ''').fetchall()
     con.commit()
     con.close()
     return search
@@ -135,10 +154,22 @@ def turnOffGuildNotion(guildId):
     con.commit()
     con.close()
 
+def renewOriginalProblems():
+    con = sqlite3.connect(DATABASE_PATH)
+    cur = con.cursor()
+    cur.execute(f'''
+        DROP TABLE "{PROBLEM_LOCAL_SRC}";
+    ''')
+    con.commit()
+    con.close()
+    initializeDataBase()
+    updateProblems()
+    renewProblems()
+
 def renewProblems():
     con = sqlite3.connect(DATABASE_PATH)
     cur = con.cursor()
-    localProblemIds = list(map(lambda x: x[0], cur.execute(f'''
+    localProblemIds = list(map(lambda x: (x[0], x[1]), cur.execute(f'''
         SELECT *
         FROM "{PROBLEM_LOCAL_SRC}"
     ''').fetchall()))
@@ -171,10 +202,10 @@ def updateProblems():
             siteProblems = json.loads(response.text)["items"]
         cur.execute(f'''
             INSERT
-            INTO "{PROBLEM_LOCAL_SRC}" (problemId)
-            VALUES ({siteProblems[i % 50]["problemId"]})
+            INTO "{PROBLEM_LOCAL_SRC}" (problemId, problemTier)
+            VALUES ({siteProblems[i % 50]["problemId"]}, {15 - siteProblems[i % 50]["level"]})
         ''').fetchall()
-        tmp.append(siteProblems[i % 50]["problemId"])
+        tmp.append((siteProblems[i % 50]["problemId"], 15 - siteProblems[i % 50]["level"]))
     addToJson(PROBLEMS_JSON_PATH, *tmp)
     con.commit()
     con.close()
@@ -183,8 +214,8 @@ def getRandomProblem():
     updateProblems()
     problems = getFromJson(PROBLEMS_JSON_PATH)
     idx = random.randint(0, len(problems))
-    problem = popJson(PROBLEMS_JSON_PATH, idx)
+    problem, tier = popJson(PROBLEMS_JSON_PATH, idx)
     if len(problems) == 1:
         renewProblems()
     print(len(problems) - 1)
-    return (idx, problem)
+    return (problem, tier)
