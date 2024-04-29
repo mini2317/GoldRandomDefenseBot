@@ -10,4 +10,5 @@
 **해당 폴더 내에 해당 이름의 파일이 필요합니다.**  
 - data  
 &nbsp; ㄴ token.txt  
-&nbsp; ㄴ users.db
+&nbsp; ㄴ data.db
+&nbsp; ㄴ problems.json

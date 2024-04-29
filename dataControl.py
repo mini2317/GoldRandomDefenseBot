@@ -138,13 +138,14 @@ def turnOffGuildNotion(guildId):
 def renewProblems():
     con = sqlite3.connect(DATABASE_PATH)
     cur = con.cursor()
-    cur.execute(f'''
-        DELETE
-        FROM {PROBLEM_LOCAL_SRC}
-    ''')
+    localProblemIds = list(map(lambda x: x[0], cur.execute(f'''
+        SELECT *
+        FROM "{PROBLEM_LOCAL_SRC}"
+    ''').fetchall()))
     con.commit()
     con.close()
-    updateProblems()
+    with open(PROBLEMS_JSON_PATH, 'w', encoding = "UTF-8") as file: 
+        file.write(json.dumps(localProblemIds))
 
 def updateProblems():
     response = requests.get("https://solved.ac/api/v3/search/problem?query=*g&direction=asc&sort=id")
