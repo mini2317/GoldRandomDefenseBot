@@ -76,9 +76,13 @@ async def on_ready():
     await bot.change_presence(activity = discord.Game(name = "ㄱ도움"))
 
 @bot.command()
+async def 테스트(ctx):
+    if ctx.author.id in BOT_OWNERS_ID:
+        problemId, tier = getRandomProblem()
+        await alertToGuilds(problemId, tier)
+
+@bot.command()
 async def 핑(ctx):
-    problemId, tier = getRandomProblem()
-    await alertToGuilds(problemId, tier)
     await ctx.send(f'``{bot.latency * 1000}ms``')
 
 @bot.command()
