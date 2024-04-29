@@ -12,3 +12,4 @@
 &nbsp; ㄴ token.txt  
 &nbsp; ㄴ data.db
 &nbsp; ㄴ problems.json
+&nbsp; ㄴ botOwnerId.txt

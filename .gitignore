@@ -1,4 +1,6 @@
-data
+data/data.db
+data/problems.json
+data/token.txt
 Lib
 Include
 Scripts
