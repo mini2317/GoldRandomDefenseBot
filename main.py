@@ -83,13 +83,13 @@ async def 핑(ctx):
 
 @bot.command()
 async def 재구성(ctx):
-    if ctx.author.id == BOT_OWNER_ID:
+    if ctx.author.id in BOT_OWNERS_ID:
         renewOriginalProblems()
         await ctx.send(f'``데이터베이스가 초기화 된 후 다시 업데이트되었습니다!``')
 
 @bot.command()
 async def 리필(ctx):
-    if ctx.author.id == BOT_OWNER_ID:
+    if ctx.author.id in BOT_OWNERS_ID:
         renewProblems()
         await ctx.send(f'``json이 초기화 된 후 다시 업데이트되었습니다!``')
 

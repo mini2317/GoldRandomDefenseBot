@@ -6,7 +6,7 @@ GUILD_MASTER = "GuildMaster"
 PROBLEM_LOCAL_SRC = "ProblemLocalSource"
 PROBLEMS_JSON_PATH = os.path.join('.','data','problems.json')
 TOKEN_PATH = os.path.join('.','data','token.txt')
-BOT_OWNER_ID_PATH = os.path.join('.','data','botOwnerId.txt')
+BOT_OWNERS_ID_PATH = os.path.join('.','data','botOwnerId.txt')
 
 GOLD_COLOR = 0xec9a00
 GOLD_5_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465905854120016/11.png?ex=6630d577&is=662f83f7&hm=021e5322d9965a3929696a1347d0d1312962099f4d342da3db84d4ed9f04f075&=&format=webp&quality=lossless&width=600&height=768"
@@ -28,8 +28,8 @@ FHBT_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/11771
 with open(TOKEN_PATH, 'r', encoding = "UTF-8") as file:
     TOKEN = file.read()
 
-with open(BOT_OWNER_ID_PATH, 'r', encoding = "UTF-8") as file:
-    BOT_OWNER_ID = int(file.read())
+with open(BOT_OWNERS_ID_PATH, 'r', encoding = "UTF-8") as file:
+    BOT_OWNERS_ID = tuple(map(int, file.read().split("\n")))
 
 def getFromJson(jsonFilePath):
     with open(jsonFilePath, 'r', encoding = "UTF-8") as file: 

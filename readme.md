@@ -10,8 +10,8 @@
 - data  
 &nbsp; ㄴ token.txt  
 &nbsp; ㄴ data.db
-&nbsp; ㄴ problems.json
-&nbsp; ㄴ botOwnerId.txt
+&nbsp; ㄴ problems.json  
+&nbsp; ㄴ botOwnerId.txt  
 
 **제작자**  
 \*디스코드 닉네임에 깃헙 주소를 입혀두었습니다.
