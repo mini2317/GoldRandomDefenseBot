@@ -94,6 +94,7 @@ async def 개발자(ctx, *arg):
     if arg[0] != "도움": return
     embed = discord.Embed(title = f"개발자 도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "핑", value = "핑을 보냄", inline = False)
+    embed.add_field(name = "제거 <문제 번호>", value = "해당 문제를 데이터베이스에서 제거", inline = False)
     embed.add_field(name = "테스트", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
     embed.add_field(name = "재구성", value = "sql 데이터 베이스를 엎어버린 후 api를 통해 다시 문제들을 가져옴", inline = False)
     embed.add_field(name = "테이블 재구성", value = "sql 데이터 베이스 자체의 구조를 바꾼대로 구성하며, 다시 문제를 채워넣음", inline = False)
@@ -103,6 +104,14 @@ async def 개발자(ctx, *arg):
 async def 핑(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
         await ctx.send(f'``{bot.latency * 1000}ms``')
+
+@bot.command()
+async def 제거(ctx, *arg):
+    if not len(arg): return
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``{arg[0]}제거 시도``')
+        deleteProblemFromTable(int(arg[0]))
+        await ctx.send(f'``{arg[0]}제거 완료``')
 
 @bot.command()
 async def 테스트(ctx):

@@ -188,7 +188,17 @@ def renewProblems():
     with open(PROBLEMS_JSON_PATH, 'w', encoding = "UTF-8") as file: 
         file.write(json.dumps(localProblemIds))
 
-def updateProblems():
+def deleteProblemFromTable(problemId):
+    con = sqlite3.connect(DATABASE_PATH)
+    cur = con.cursor()
+    cur.execute(f'''
+        DELETE FROM "{PROBLEM_LOCAL_SRC}"
+        WHERE problemId = "{problemId}";
+    ''')
+    con.commit()
+    con.close()
+
+def updateProblems(onlyEditTable = False):
     response = requests.get("https://solved.ac/api/v3/search/problem?query=*g&direction=asc&sort=id")
     siteProblemCnt = json.loads(response.text)['count']
     con = sqlite3.connect(DATABASE_PATH)
@@ -204,28 +214,37 @@ def updateProblems():
     tmp = []
     for i in range(localProblemCnt, siteProblemCnt):
         if i % 50 == 0:
-            print(f'데이터 로드 : {i / siteProblemCnt * 100} % ({i} / {siteProblemCnt}) 완료')
+            print(f'데이터 로드 : {(i - localProblemCnt) / (siteProblemCnt - localProblemCnt) * 100} % ({i} / {siteProblemCnt - localProblemCnt}) 완료')
             if i == 0:
                 response = requests.get(f"https://solved.ac/api/v3/search/problem?query=*g&direction=asc&sort=id")
             else:
                 response = requests.get(f"https://solved.ac/api/v3/search/problem?query=*g&direction=asc&page={i // 50}&sort=id")
             siteProblems = json.loads(response.text)["items"]
-        print(f'데이터 로드 : 100.0 % ({siteProblemCnt} / {siteProblemCnt}) 완료')
         cur.execute(f'''
             INSERT
             INTO "{PROBLEM_LOCAL_SRC}" (problemId)
             VALUES ({siteProblems[i % 50]["problemId"]})
         ''').fetchall()
-        tmp.append(siteProblems[i % 50]["problemId"])
-    addToJson(PROBLEMS_JSON_PATH, *tmp)
+        if not onlyEditTable:
+            tmp.append(siteProblems[i % 50]["problemId"])
+    if siteProblemCnt % 50 != 0:
+        print(f'데이터 로드 : 100.0 % ({siteProblemCnt - localProblemCnt} / {siteProblemCnt - localProblemCnt}) 완료')
+    if not onlyEditTable:
+        addToJson(PROBLEMS_JSON_PATH, *tmp)
     con.commit()
     con.close()
 
 def getRandomProblem():
     updateProblems()
-    problems = getFromJson(PROBLEMS_JSON_PATH)
-    idx = random.randint(0, len(problems))
-    problemId = popJson(PROBLEMS_JSON_PATH, idx)
-    if len(problems) == 1:
-        renewProblems()
+    while True:
+        problems = getFromJson(PROBLEMS_JSON_PATH)
+        idx = random.randint(0, len(problems))
+        problemId = popJson(PROBLEMS_JSON_PATH, idx)
+        if len(problems) == 1:
+            renewProblems()
+        problem = Problem(problemId)
+        if 11 <= problem("level") <= 15:
+            break
+        else:
+            deleteProblemFromTable(problemId)
     return Problem(problemId)
