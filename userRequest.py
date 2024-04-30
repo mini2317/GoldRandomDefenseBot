@@ -2,8 +2,8 @@ import requests, json
 class User:
     def __init__(self, handle : int):
         self.handle = handle
-        response = requests.get(f"https://solved.ac/api/v3/search/problem?query=id:{self.handle}&direction=asc&sort=id")
-        if response.text:
+        response = requests.get(f"https://solved.ac/api/v3/user/show?handle={handle}")
+        if response.text != "Not Found":
             self.info = json.loads(response.text)
         else:
             self.info = None
@@ -14,6 +14,7 @@ class User:
         else:
             return self.info[key]
 
-def checkExistHandle(handle):
+def IsExistHandle(handle):
     response = requests.get(f"https://solved.ac/api/v3/user/show?handle={handle}")
-    return bool(json.loads(response.text)['count'])
+    print(response.text)
+    return response.text != "Not Found"

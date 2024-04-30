@@ -73,15 +73,15 @@ class DeleteUser(View):
     
     @discord.ui.button(label = "확인", style = discord.ButtonStyle.primary, emoji = "✅")
     async def ok(self, interaction, button):
-        if UserData.get(user.id):
+        user = self.ctx.message.author
+        if not UserData.get(user.id):
             embed = discord.Embed(
-                title = "⚠️ 가입 실패 ⚠️",
-                description='이미 가입되어 있는 유저입니다!',
+                title = "⚠️ 탈퇴 실패 ⚠️",
+                description='가입되어 있지 않습니다.',
                 color = discord.Color.red()
             )
             await self.ctx.send(embed = embed)
             return
-        user = self.ctx.message.author
         if self.disabled or (not interaction.user.id == user.id):
             return
         self.disabled = True
@@ -189,8 +189,7 @@ async def 가입(ctx, *arg):
         await ctx.send(embed = embed)
         return
     if not UserData.get(ctx.author.id):
-        user = User(arg[0])
-        if user.info is None:
+        if not IsExistHandle(arg[0]):
             embed = discord.Embed(
                 title = "⚠️ 가입 실패 ⚠️",
                 description='존재하지 않는 핸들입니다!',
