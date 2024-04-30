@@ -10,16 +10,25 @@ initializeDataBase()
 
 def addGuildWithDefaultChannel(guild):
     if not getGuild(guild.id):
-            for channel in guild.channels:
-                if channel.type == discord.ChannelType.text:
-                    addGuild(guild.id, channel.id)
-                    break
+        for channel in guild.channels:
+            if channel.type == discord.ChannelType.text:
+                addGuild(guild.id, channel.id)
+                break
+        else:
+            addGuild(guild.id, -1)
 
 async def alertToGuilds(problem : Problem):
     for guild in bot.guilds:
         addGuildWithDefaultChannel(guild)
         if getGuild(guild.id)[0][2]:
             nowGuild = getGuild(guild.id)[0]
+            if nowGuild[1] == -1:
+                for channel in guild.channels:
+                    if channel.type == discord.ChannelType.text:
+                        changeGuildNotionChannel(guild.id, channel.id)
+                        break
+                else:
+                    return
             testChannel = bot.get_guild(guild.id).get_channel(nowGuild[1])
             embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"[{problem.problemId} - {problem('titleKo')}](https://www.acmicpc.net/problem/{problem.problemId})", color = GOLD_COLOR)
             embed.set_thumbnail(url = GOLD_IMAGE[15 - problem("level")])
@@ -140,8 +149,8 @@ async def 도움(ctx, *arg):
 async def 도움(ctx, *arg):
     embed = discord.Embed(title = f"소개글 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "개요", value = "이 봇은 비공식으로 제작된 골드 랜덤 디펜스 봇입니다.\n이 봇은 원작자의 요청에 따라 언제든 서비스가 중단될 수 있습니다.", inline = False)
-    embed.add_field(name = "서비스 내용", value = "매일 12시에 무작위 골드 문제를 받아보세요!\n가입까지 하신다면 골드 문제 스트릭과 봇 내에서의 재화인 '골드'를 따로 얻으실 수 있습니다.", inline = False)
-    embed.add_field(name = "제작자", value = "[@moomin_dev](https://github.com/mini2317)\n[@retro_forever](https://github.com/Migayeon)", inline = False)
+    embed.add_field(name = "서비스 내용", value = "매일 0시에 무작위 골드 문제를 받아보세요!\n가입까지 하신다면 골드 문제 스트릭과 봇 내에서의 재화인 **골드**를 따로 얻으실 수 있습니다.", inline = False)
+    embed.add_field(name = "제작자", value = "[@moomin_dev](https://github.com/mini2317)", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "가입")

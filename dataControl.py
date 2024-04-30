@@ -66,7 +66,7 @@ def initializeDataBase():
     cur = con.cursor()
     tableExist = cur.execute(f"SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     if not any(map(lambda x : x[0] == USER_MASTER or USER_MASTER == f"'{x[0]}'", tableExist)):
-        cur.execute(f'''CREATE TABLE {USER_MASTER} (userId INT, handling TEXT)''')
+        cur.execute(f'''CREATE TABLE {USER_MASTER} (userId INT, handling TEXT, streak INT, longestStreak INT, gold INT, solvedCnt INT)''')
     if not any(map(lambda x : x[0] == GUILD_MASTER or GUILD_MASTER == f"'{x[0]}'", tableExist)):
         cur.execute(f'''CREATE TABLE {GUILD_MASTER} (guildId INT, channelId INT, canNotion INT)''')
     if not any(map(lambda x : x[0] == PROBLEM_LOCAL_SRC or PROBLEM_LOCAL_SRC == f"'{x[0]}'", tableExist)):
@@ -91,8 +91,8 @@ def addUser(userId, handling):
     cur = con.cursor()
     cur.execute(f'''
         INSERT
-        INTO "{USER_MASTER}" (userId, handling)
-        VALUES ("{userId}", "{handling}")
+        INTO "{USER_MASTER}" (userId, handling, streak, longestStreak, gold, solvedCnt)
+        VALUES ("{userId}", "{handling}", 0, 0, 0, 0)
     ''')
     con.commit()
     con.close()
@@ -210,6 +210,7 @@ def updateProblems():
             else:
                 response = requests.get(f"https://solved.ac/api/v3/search/problem?query=*g&direction=asc&page={i // 50}&sort=id")
             siteProblems = json.loads(response.text)["items"]
+        print(f'데이터 로드 : 100.0 % ({siteProblemCnt} / {siteProblemCnt}) 완료')
         cur.execute(f'''
             INSERT
             INTO "{PROBLEM_LOCAL_SRC}" (problemId)
