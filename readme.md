@@ -12,6 +12,7 @@
 &nbsp; ㄴ data.db  
 &nbsp; ㄴ problems.json  
 &nbsp; ㄴ botAdminsId.txt  
+&nbsp; ㄴ problemOfToday.json  
 
 **제작자 (디스코드 닉네임에 깃헙 주소를 링크로 입혀두었습니다.)**
 - [@moomin_dev](https://github.com/mini2317)

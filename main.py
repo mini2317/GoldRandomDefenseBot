@@ -7,7 +7,6 @@ from userData import *
 
 bot = commands.Bot(command_prefix='ㄱ', intents = discord.Intents.all())
 bot.remove_command('help')
-initializeDataBase()
 
 def addGuildWithDefaultChannel(guild):
     if not GuildData.get(guild.id):
@@ -18,7 +17,8 @@ def addGuildWithDefaultChannel(guild):
         else:
             GuildData.add(guild.id, -1)
 
-async def alertToGuilds(problem : Problem):
+async def setProblemOfTodayAndAlert(problem : Problem):
+    setJson(PROBLEM_OF_TODAY_JSON_PATH, problem.info)
     for guild in bot.guilds:
         addGuildWithDefaultChannel(guild)
         if GuildData.get(guild.id)[0][2]:
@@ -119,6 +119,7 @@ async def 개발자(ctx, *arg):
     embed.add_field(name = "스트릭증가", value = "사용자의 스트릭을 1 증가시킵니다.", inline = False)
     embed.add_field(name = "스트릭리셋", value = "사용자의 스트릭을 0으로 설정합니다.", inline = False)
     embed.add_field(name = "골드증가 <숫자>", value = "사용자의 골드가 <숫자>만큼 증가합니다.", inline = False)
+    embed.add_field(name = "리워드", value = "사용자의 골드가 리워드만큼 증가합니다.", inline = False)
     embed.add_field(name = "뽑기", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
     embed.add_field(name = "문제 제구성", value = "문제 테이블을 drop한 후 다시 문제를 채워넣습니다.", inline = False)
     embed.add_field(name = "전체 재구성", value = "모든 테이블을 drop한 후 다시 구성합니다. 다시 문제도 다시 채워넣습니다.", inline = False)
@@ -155,6 +156,13 @@ async def 골드증가(ctx, *arg):
         await ctx.send(f'``골드 증가 성공``')
 
 @bot.command()
+async def 리워드(ctx, *arg):
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``리워드를 받습니다.``')
+        reward = UserData.addRewardGold(ctx.author.id)
+        await ctx.send(f'``{reward} 골드 휙득``')
+
+@bot.command()
 async def 문제제거(ctx, *arg):
     if not len(arg): 
         await ctx.send(f'``문제제거 <문제번호>``')
@@ -168,7 +176,7 @@ async def 문제제거(ctx, *arg):
 async def 뽑기(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
         problem = ProblemData.popRandomProblem()
-        await alertToGuilds(problem)
+        await setProblemOfTodayAndAlert(problem)
 
 @bot.command()
 async def 문제(ctx, *arg):
@@ -338,6 +346,6 @@ async def alertEveryday():
     if tester or second + minute + hour == 0:
         checkUserSolved()
         problemId = ProblemData.popRandomProblem()
-        await alertToGuilds(problemId)
+        await setProblemOfTodayAndAlert(problemId)
 
 bot.run(TOKEN)

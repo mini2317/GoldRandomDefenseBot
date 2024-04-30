@@ -6,3 +6,4 @@ Include
 Scripts
 pyvenv.cfg
 __pycache__
+data/problemOfToday.json

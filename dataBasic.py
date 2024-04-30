@@ -8,6 +8,7 @@ USER_MASTER = "UserMaster"
 GUILD_MASTER = "GuildMaster"
 PROBLEM_LOCAL_SRC = "ProblemLocalSource"
 PROBLEMS_JSON_PATH = os.path.join('.','data','problems.json')
+PROBLEM_OF_TODAY_JSON_PATH = os.path.join('.','data','problemOfToday.json')
 TOKEN_PATH = os.path.join('.','data','token.txt')
 BOT_ADMINS_ID_PATH = os.path.join('.','data','botAdminsId.txt')
 
@@ -51,6 +52,11 @@ def getFromJson(jsonFilePath):
     with open(jsonFilePath, 'r', encoding = "UTF-8") as file: 
         loadedJson = json.loads(file.read())
     return loadedJson
+
+def setJson(jsonFilePath, contents):
+    with open(jsonFilePath, 'w', encoding = "UTF-8") as file: 
+        file.write(json.dumps(contents))
+
 
 def addToJson(jsonFilePath, *contents):
     with open(jsonFilePath, 'r', encoding = "UTF-8") as file: 

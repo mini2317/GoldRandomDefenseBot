@@ -90,6 +90,13 @@ class UserData:
         con.close()
     
     @staticmethod
+    def addRewardGold(userId):
+        user = UserData.get(userId)
+        amount = getFromJson(PROBLEM_OF_TODAY_JSON_PATH)["level"] + max(0, min(5, user[UserDataIdx.streak] - 3))
+        UserData.addGold(userId, amount)
+        return amount
+
+    @staticmethod
     def delete(userId):
         con = sqlite3.connect(DATABASE_PATH)
         cur = con.cursor()
@@ -105,6 +112,7 @@ class UserData:
     def updateUsersStreak(problemId):
         for user in UserData.getEveryUsers():
             if checkUserSolved(user[UserDataIdx.handle], problemId):
+                UserData.addRewardGold(user[UserDataIdx.userId])
                 UserData.updateStreak(user[UserDataIdx.userId])
             else:
                 UserData.resetStreak(user[UserDataIdx.userId])
