@@ -1,7 +1,7 @@
 import os, sqlite3, json
 from problemRequest import *
 from userRequest import *
-from enum import Enum
+from enum import IntEnum
 
 DATABASE_PATH = os.path.join('.','data','data.db')
 USER_MASTER = "UserMaster"
@@ -26,7 +26,7 @@ GOLD_IMAGE = [
     GOLD_5_IMAGE
 ]
 
-class UserDataIdx(Enum):
+class UserDataIdx(IntEnum):
     userId = 0
     handle = 1
     streak = 2
@@ -34,7 +34,7 @@ class UserDataIdx(Enum):
     gold = 4
     solvedCnt = 5
 
-class GuildDataIdx(Enum):
+class GuildDataIdx(IntEnum):
     guildId = 0
     channelId = 1
     canNotion = 2

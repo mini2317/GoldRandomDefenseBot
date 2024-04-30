@@ -78,7 +78,7 @@ class UserData:
         cur = con.cursor()
         cur.execute(f'''
             UPDATE "{USER_MASTER}"
-            SET streak = {user[UserDataIdx.gold] + amount}
+            SET gold = {user[UserDataIdx.gold] + amount}
             WHERE userId = '{userId}'
         ''')
         con.commit()

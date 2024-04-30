@@ -107,11 +107,18 @@ async def on_ready():
 
 @bot.command(name = "개발자")
 async def 개발자(ctx, *arg):
-    if not len(arg): return
-    if arg[0] != "도움": return
+    if not len(arg):
+        await ctx.send(f'``ㄱ개발자 도움``')
+        return
+    if arg[0] != "도움":
+        await ctx.send(f'``ㄱ개발자 도움``')
+        return
     embed = discord.Embed(title = f"개발자 도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "핑", value = "핑을 보냄", inline = False)
-    embed.add_field(name = "제거 <문제 번호>", value = "해당 문제를 데이터베이스에서 제거", inline = False)
+    embed.add_field(name = "문제제거 <문제 번호>", value = "해당 문제를 데이터베이스에서 제거", inline = False)
+    embed.add_field(name = "스트릭증가", value = "사용자의 스트릭을 1 증가시킵니다.", inline = False)
+    embed.add_field(name = "스트릭리셋", value = "사용자의 스트릭을 0으로 설정합니다.", inline = False)
+    embed.add_field(name = "골드증가 <숫자>", value = "사용자의 골드가 <숫자>만큼 증가합니다.", inline = False)
     embed.add_field(name = "뽑기", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
     embed.add_field(name = "문제 제구성", value = "문제 테이블을 drop한 후 다시 문제를 채워넣습니다.", inline = False)
     embed.add_field(name = "전체 재구성", value = "모든 테이블을 drop한 후 다시 구성합니다. 다시 문제도 다시 채워넣습니다.", inline = False)
@@ -124,8 +131,34 @@ async def 핑(ctx):
         await ctx.send(f'``{bot.latency * 1000}ms``')
 
 @bot.command()
-async def 제거(ctx, *arg):
-    if not len(arg): return
+async def 스트릭증가(ctx):
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``스트릭을 증가시킵니다.``')
+        UserData.updateStreak(ctx.author.id)
+        await ctx.send(f'``스트릭 증가 성공``')
+
+@bot.command()
+async def 스트릭리셋(ctx):
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``스트릭을 리셋시킵니다.``')
+        UserData.resetStreak(ctx.author.id)
+        await ctx.send(f'``스트릭 리셋 성공``')
+
+@bot.command()
+async def 골드증가(ctx, *arg):
+    if not len(arg):
+        await ctx.send(f'``골드증가 <숫자>``')
+        return
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``골드를 증가시킵니다.``')
+        UserData.addGold(ctx.author.id, int(arg[0]))
+        await ctx.send(f'``골드 증가 성공``')
+
+@bot.command()
+async def 문제제거(ctx, *arg):
+    if not len(arg): 
+        await ctx.send(f'``문제제거 <문제번호>``')
+        return
     if ctx.author.id in BOT_ADMINS_ID:
         await ctx.send(f'``{arg[0]}제거 시도``')
         ProblemData.deleteById(int(arg[0]))
@@ -199,7 +232,7 @@ async def 가입(ctx, *arg):
             return
         embed = discord.Embed(
             title = f"🔔 가입 🔔",
-            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 계정이라는 것에 대해 별다른 인증은 하지 않으나, 공부를 위한 봇인만큼 본인 핸들을 이용해주시면 좋겠습니다!",
+            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 핸들이라는 것에 대해 별다른 인증은 필요 없으나, 공부를 위한 봇인만큼 본인 핸들을 이용해주시면 좋겠습니다!",
             color = GOLD_COLOR
         )
         await ctx.send(embed = embed, view = RegisterUser(ctx, arg))

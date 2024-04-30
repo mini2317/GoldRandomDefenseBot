@@ -16,5 +16,4 @@ class User:
 
 def IsExistHandle(handle):
     response = requests.get(f"https://solved.ac/api/v3/user/show?handle={handle}")
-    print(response.text)
     return response.text != "Not Found"
