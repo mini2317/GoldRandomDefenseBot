@@ -54,10 +54,9 @@ class ProblemData:
             con.close()
             return
         tmp = []
-        siteProblems = dict()
         for i in range(localProblemCnt, siteProblemCnt):
-            if i % 50 == 0:
-                print(f'데이터 로드 : {(i - localProblemCnt) / (siteProblemCnt - localProblemCnt) * 100} % ({i} / {siteProblemCnt - localProblemCnt}) 완료')
+            if i % 50 == 0 or i == localProblemCnt:
+                print(f'데이터 로드 : {(i - localProblemCnt) / (siteProblemCnt - localProblemCnt) * 100} % ({i - localProblemCnt} / {siteProblemCnt - localProblemCnt}) 완료')
                 if i == 0:
                     response = requests.get(f"https://solved.ac/api/v3/search/problem?query=*g&direction=asc&sort=id")
                 else:
