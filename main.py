@@ -2,6 +2,7 @@ from discord.ext import tasks, commands
 from discord.ui import View
 import discord, datetime
 from dataControl import *
+from problemClass import *
 
 bot = commands.Bot(command_prefix='ㄱ', intents = discord.Intents.all())
 bot.remove_command('help')
@@ -14,14 +15,14 @@ def addGuildWithDefaultChannel(guild):
                     addGuild(guild.id, channel.id)
                     break
 
-async def alertToGuilds(problemId, tier):
+async def alertToGuilds(problem : Problem):
     for guild in bot.guilds:
         addGuildWithDefaultChannel(guild)
         if getGuild(guild.id)[0][2]:
             nowGuild = getGuild(guild.id)[0]
             testChannel = bot.get_guild(guild.id).get_channel(nowGuild[1])
-            embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"https://www.acmicpc.net/problem/{problemId}", color = GOLD_COLOR)
-            embed.set_thumbnail(url = GOLD_IMAGE[tier])
+            embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"[{problem.problemId} - {problem('titleKo')}](https://www.acmicpc.net/problem/{problem.problemId})", color = GOLD_COLOR)
+            embed.set_thumbnail(url = GOLD_IMAGE[15 - problem("level")])
             await testChannel.send(embed = embed)
 
 class RegisterUser(View):
@@ -78,6 +79,17 @@ async def on_ready():
         alertEveryday.start()
     await bot.change_presence(activity = discord.Game(name = "ㄱ도움"))
 
+@bot.command(name = "개발자")
+async def 개발자(ctx, *arg):
+    if not len(arg): return
+    if arg[0] != "도움": return
+    embed = discord.Embed(title = f"개발자 도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
+    embed.add_field(name = "핑", value = "핑을 보냄", inline = False)
+    embed.add_field(name = "테스트", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
+    embed.add_field(name = "재구성", value = "sql 데이터 베이스를 엎어버린 후 api를 통해 다시 문제들을 가져옴", inline = False)
+    embed.add_field(name = "테이블 재구성", value = "sql 데이터 베이스 자체의 구조를 바꾼대로 구성하며, 다시 문제를 채워넣음", inline = False)
+    await ctx.send(embed = embed)
+
 @bot.command()
 async def 핑(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
@@ -86,21 +98,28 @@ async def 핑(ctx):
 @bot.command()
 async def 테스트(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
-        problemId, tier = getRandomProblem()
-        await alertToGuilds(problemId, tier)
+        problem = getRandomProblem()
+        await alertToGuilds(problem)
 
 @bot.command()
 async def 재구성(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``데이터 베이스 초기화 후 api에서 다시 정보를 가져오는 중..``')
         renewOriginalProblems()
-        await ctx.send(f'``데이터베이스가 초기화 된 후 다시 업데이트되었습니다!``')
+        await ctx.send(f'``데이터베이스가 초기화 된 후 업데이트되었습니다!``')
 
 @bot.command()
-async def 테이블재구성(ctx):
+async def 테이블(ctx, *arg):
     if ctx.author.id in BOT_ADMINS_ID:
+        if not len(arg): return
+        if arg[0] != "재구성": return
+        await ctx.send(f'``데이터베이스가 초기화 시작``')
         dropEveryDataBases()
+        await ctx.send(f'``테이블 구조 재구성 중...``')
         initializeDataBase()
-        await ctx.send(f'``데이터베이스가 초기화 된 후 다시 업데이트되었습니다!``')
+        await ctx.send(f'``문제를 가져오는 중...``')
+        renewOriginalProblems()
+        await ctx.send(f'``데이터베이스 테이블이 성공적으로 재구성되었습니다!``')
 
 @bot.command()
 async def 리필(ctx):
@@ -110,10 +129,19 @@ async def 리필(ctx):
 
 @bot.command(name = "도움")
 async def 도움(ctx, *arg):
-    embed = discord.Embed(title = "도움 <:fhbt:1159345785528385606>", color = 0x18c0e2)
+    embed = discord.Embed(title = f"도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
+    embed.add_field(name = "소개", value = "이 봇에 대한 기본적인 정보들을 알아보세요!", inline = False)
     embed.add_field(name = "가입", value = "가입해서 매일 나오는 문제들을 풀어보세요!", inline = False)
-    embed.add_field(name = "탈퇴", value = "탈퇴하여 더 이상 문제들을 받지 않습니다.", inline = False)
+    embed.add_field(name = "탈퇴", value = "탈퇴하여 기능의 일부를 이용하지 않습니다.", inline = False)
     embed.add_field(name = "알림", value = "알림에 관한 도움말을 봅니다.", inline = False)
+    await ctx.send(embed = embed)
+
+@bot.command(name = "소개")
+async def 도움(ctx, *arg):
+    embed = discord.Embed(title = f"소개글 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
+    embed.add_field(name = "개요", value = "이 봇은 비공식으로 제작된 골드 랜덤 디펜스 봇입니다.\n이 봇은 원작자의 요청에 따라 언제든 서비스가 중단될 수 있습니다.", inline = False)
+    embed.add_field(name = "서비스 내용", value = "매일 12시에 무작위 골드 문제를 받아보세요!\n가입까지 하신다면 골드 문제 스트릭과 봇 내에서의 재화인 '골드'를 따로 얻으실 수 있습니다.", inline = False)
+    embed.add_field(name = "제작자", value = "[@moomin_dev](https://github.com/mini2317)\n[@retro_forever](https://github.com/Migayeon)", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "가입")
@@ -125,7 +153,7 @@ async def 가입(ctx, *arg):
     if not getUser(ctx.author.id):
         embed = discord.Embed(
             title = f"🔔 가입 🔔",
-            description = "가입해서 매일 나오는 무작위 문제들을 풀어보세요!",
+            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 계정이라는 것에 대해 별다른 인증은 하지 않으나, 공부를 위한 봇인만큼 본인 핸들링을 이용해주시면 좋겠습니다!",
             color = GOLD_COLOR
         )
         await ctx.send(embed = embed, view = RegisterUser(ctx, arg))

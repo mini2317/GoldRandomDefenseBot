@@ -1,4 +1,5 @@
 import os, sqlite3, requests, json, random
+from problemClass import *
 
 DATABASE_PATH = os.path.join('.','data','data.db')
 USER_MASTER = "UserMaster"
@@ -69,7 +70,7 @@ def initializeDataBase():
     if not any(map(lambda x : x[0] == GUILD_MASTER or GUILD_MASTER == f"'{x[0]}'", tableExist)):
         cur.execute(f'''CREATE TABLE {GUILD_MASTER} (guildId INT, channelId INT, canNotion INT)''')
     if not any(map(lambda x : x[0] == PROBLEM_LOCAL_SRC or PROBLEM_LOCAL_SRC == f"'{x[0]}'", tableExist)):
-        cur.execute(f'''CREATE TABLE {PROBLEM_LOCAL_SRC} (problemId INT, problemTier INT)''')
+        cur.execute(f'''CREATE TABLE {PROBLEM_LOCAL_SRC} (problemId INT)''')
     con.commit()
     con.close()
 
@@ -178,7 +179,7 @@ def renewOriginalProblems():
 def renewProblems():
     con = sqlite3.connect(DATABASE_PATH)
     cur = con.cursor()
-    localProblemIds = list(map(lambda x: (x[0], x[1]), cur.execute(f'''
+    localProblemIds = list(map(lambda x: x[0], cur.execute(f'''
         SELECT *
         FROM "{PROBLEM_LOCAL_SRC}"
     ''').fetchall()))
@@ -203,7 +204,7 @@ def updateProblems():
     tmp = []
     for i in range(localProblemCnt, siteProblemCnt):
         if i % 50 == 0:
-            print(f'데이터 로드 : {i / siteProblemCnt * 100} % 완료')
+            print(f'데이터 로드 : {i / siteProblemCnt * 100} % ({i} / {siteProblemCnt}) 완료')
             if i == 0:
                 response = requests.get(f"https://solved.ac/api/v3/search/problem?query=*g&direction=asc&sort=id")
             else:
@@ -211,10 +212,10 @@ def updateProblems():
             siteProblems = json.loads(response.text)["items"]
         cur.execute(f'''
             INSERT
-            INTO "{PROBLEM_LOCAL_SRC}" (problemId, problemTier)
-            VALUES ({siteProblems[i % 50]["problemId"]}, {15 - siteProblems[i % 50]["level"]})
+            INTO "{PROBLEM_LOCAL_SRC}" (problemId)
+            VALUES ({siteProblems[i % 50]["problemId"]})
         ''').fetchall()
-        tmp.append((siteProblems[i % 50]["problemId"], 15 - siteProblems[i % 50]["level"]))
+        tmp.append(siteProblems[i % 50]["problemId"])
     addToJson(PROBLEMS_JSON_PATH, *tmp)
     con.commit()
     con.close()
@@ -223,8 +224,7 @@ def getRandomProblem():
     updateProblems()
     problems = getFromJson(PROBLEMS_JSON_PATH)
     idx = random.randint(0, len(problems))
-    problem, tier = popJson(PROBLEMS_JSON_PATH, idx)
+    problemId = popJson(PROBLEMS_JSON_PATH, idx)
     if len(problems) == 1:
         renewProblems()
-    print(len(problems) - 1)
-    return (problem, tier)
+    return Problem(problemId)
