@@ -8,6 +8,22 @@ from userData import *
 bot = commands.Bot(command_prefix='ㄱ', intents = discord.Intents.all())
 bot.remove_command('help')
 
+def sortRank(userInfos, userId, option : UserDataIdx, count = 5) -> str:
+    units = {
+        UserDataIdx.streak : "일",
+        UserDataIdx.longestStreak : "일",
+        UserDataIdx.gold : "골드",
+        UserDataIdx.solvedCnt : "개"
+    }
+    count = min(count, len(userInfos))
+    s = sorted(userInfos, key = lambda x: x[option], reverse = True)
+    idOfUsers = tuple(map(lambda x : x[UserDataIdx.userId], s))
+    tmp = '\n'.join(f'**{i + 1}위**. {bot.get_user(idOfUsers[i]).name} ({s[i][UserDataIdx.handle]}) - {s[i][option]} {units[option]}' for i in range(count))
+    if userId in idOfUsers[:count]:
+        idx = idOfUsers.index(userId)
+        tmp += f'\n\n**{idx + 1}위** (상위 {"%.2f" % ((idx + 1) / len(idOfUsers) * 100)}%). {bot.get_user(userId).name} ({s[idx][UserDataIdx.handle]}) - {s[idx][option]} {units[option]}'
+    return tmp
+
 def addGuildWithDefaultChannel(guild):
     if not GuildData.get(guild.id):
         for channel in guild.channels:
@@ -293,39 +309,59 @@ async def 정보(ctx, *arg):
 
 @bot.command(name = "랭킹")
 async def 랭킹(ctx, *arg):
-    def sortBy(userInfos, option : UserDataIdx, count = 5):
-        units = {
-            UserDataIdx.streak : "일",
-            UserDataIdx.longestStreak : "일",
-            UserDataIdx.gold : "골드",
-            UserDataIdx.solvedCnt : "개"
-        }
-        count = min(count, len(UserData.getEveryUsers()))
-        s = sorted(userInfos, key = lambda x: x[option])
-        idOfUsers = tuple(map(lambda x : x[UserDataIdx.userId], s))
-        tmp = '\n'.join(f'**{i + 1}위**. {bot.get_user(idOfUsers[i]).name} ({s[i][UserDataIdx.handle]}) - {s[i][option]} {units[option]}' for i in range(count))
-        if ctx.author.id in idOfUsers[:count]:
-            idx = idOfUsers.index(ctx.author.id)
-            tmp += f'\n\n**{idx + 1}위** (상위 {"%.2f" % ((idx + 1) / len(idOfUsers) * 100)}%). {ctx.author.name} ({s[idx][UserDataIdx.handle]}) - {s[idx][option]} {units[option]}'
-        return tmp
-    if arg:
-        if arg[0] == "서버":
-            embed = discord.Embed(
-                title = f"🏆 {ctx.guild.name} 서버의 랭킹 🏆",
-                color = GOLD_COLOR
-            )
-            memebersId = tuple(map(lambda x: x.id, ctx.guild.members))
-            userInfos = [user for user in UserData.getEveryUsers() if user[UserDataIdx.userId] in memebersId]
+    embed = discord.Embed(
+        title = f"🌐 전체 이용자 랭킹 🌐",
+        color = GOLD_COLOR
+    )
+    userInfos = UserData.getEveryUsers()
+    if not arg:
+        embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
+        embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
+        embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
+        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
     else:
-        embed = discord.Embed(
-            title = f"🌐 전체 이용자 랭킹 🌐",
-            color = GOLD_COLOR
-        )
-        userInfos = UserData.getEveryUsers()
-    embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortBy(userInfos, UserDataIdx.streak), inline = False)
-    embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortBy(userInfos, UserDataIdx.longestStreak), inline = False)
-    embed.add_field(name = "🪙 골드 🪙", value = sortBy(userInfos, UserDataIdx.gold), inline = False)
-    embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortBy(userInfos, UserDataIdx.solvedCnt), inline = False)
+        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ"]:
+            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
+        elif arg[0] in ["최장", "ㅊㅈ"]:
+            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
+        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ"]:
+            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
+        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ"]:
+            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
+        else:
+            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
+            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
+            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
+            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
+    await ctx.send(embed = embed)
+
+@bot.command(name = "서버랭킹")
+async def 서버랭킹(ctx, *arg):
+    embed = discord.Embed(
+        title = f"🏆 {ctx.guild.name} 서버의 랭킹 🏆",
+        color = GOLD_COLOR
+    )
+    memebersId = tuple(map(lambda x: x.id, ctx.guild.members))
+    userInfos = [user for user in UserData.getEveryUsers() if user[UserDataIdx.userId] in memebersId]
+    if not arg:
+        embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
+        embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
+        embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
+        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
+    else:
+        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ"]:
+            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
+        elif arg[0] in ["최장", "ㅊㅈ"]:
+            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
+        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ"]:
+            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
+        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ"]:
+            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
+        else:
+            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
+            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
+            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
+            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "알림")

@@ -3,7 +3,7 @@ class User:
     def __init__(self, handle : int):
         self.handle = handle
         response = requests.get(f"https://solved.ac/api/v3/user/show?handle={handle}")
-        if response.text != "Not Found":
+        if not response.text in ["Not Found", "Bad Request"]:
             self.info = json.loads(response.text)
         else:
             self.info = None
@@ -16,4 +16,4 @@ class User:
 
 def IsExistHandle(handle):
     response = requests.get(f"https://solved.ac/api/v3/user/show?handle={handle}")
-    return response.text != "Not Found"
+    return not response.text in ["Not Found", "Bad Request"]
