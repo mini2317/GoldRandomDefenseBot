@@ -7,13 +7,16 @@ bot = commands.Bot(command_prefix='ㄱ', intents = discord.Intents.all())
 bot.remove_command('help')
 initializeDataBase()
 
-async def alertToGuilds(problemId, tier):
-    for guild in bot.guilds:
-        if not getGuild(guild.id):
+def addGuildWithDefaultChannel(guild):
+    if not getGuild(guild.id):
             for channel in guild.channels:
                 if channel.type == discord.ChannelType.text:
                     addGuild(guild.id, channel.id)
                     break
+
+async def alertToGuilds(problemId, tier):
+    for guild in bot.guilds:
+        addGuildWithDefaultChannel(guild)
         if getGuild(guild.id)[0][2]:
             nowGuild = getGuild(guild.id)[0]
             testChannel = bot.get_guild(guild.id).get_channel(nowGuild[1])
@@ -77,23 +80,31 @@ async def on_ready():
 
 @bot.command()
 async def 핑(ctx):
-    await ctx.send(f'``{bot.latency * 1000}ms``')
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``{bot.latency * 1000}ms``')
 
 @bot.command()
 async def 테스트(ctx):
-    if ctx.author.id in BOT_OWNERS_ID:
+    if ctx.author.id in BOT_ADMINS_ID:
         problemId, tier = getRandomProblem()
         await alertToGuilds(problemId, tier)
 
 @bot.command()
 async def 재구성(ctx):
-    if ctx.author.id in BOT_OWNERS_ID:
+    if ctx.author.id in BOT_ADMINS_ID:
         renewOriginalProblems()
         await ctx.send(f'``데이터베이스가 초기화 된 후 다시 업데이트되었습니다!``')
 
 @bot.command()
+async def 테이블재구성(ctx):
+    if ctx.author.id in BOT_ADMINS_ID:
+        dropEveryDataBases()
+        initializeDataBase()
+        await ctx.send(f'``데이터베이스가 초기화 된 후 다시 업데이트되었습니다!``')
+
+@bot.command()
 async def 리필(ctx):
-    if ctx.author.id in BOT_OWNERS_ID:
+    if ctx.author.id in BOT_ADMINS_ID:
         renewProblems()
         await ctx.send(f'``json이 초기화 된 후 다시 업데이트되었습니다!``')
 
@@ -154,11 +165,7 @@ async def 알림(ctx, *arg):
         await ctx.send(embed = embed)
         return
     if arg[0] in ["끄기", "켜기"]:
-        if getGuild(ctx.guild.id) is None:
-            for channel in ctx.guild.channels:
-                if channel.type == discord.ChannelType.text:
-                    addGuild(ctx.guild.id, channel.id)
-                    break
+        addGuildWithDefaultChannel(ctx.guild)
         if arg[0] == "켜기":
             turnOnGuildNotion(ctx.guild.id)
         else:
@@ -170,11 +177,7 @@ async def 알림(ctx, *arg):
         await ctx.send(embed = embed)
         return
     if arg[0] == "채널":
-        if getGuild(ctx.guild.id) is None:
-            for channel in ctx.guild.channels:
-                if channel.type == discord.ChannelType.text:
-                    addGuild(ctx.guild.id, channel.id)
-                    break
+        addGuildWithDefaultChannel(ctx.guild)
         if len(arg[1]) < 4:
             embed = discord.Embed(title = f"⚠️ 유효하지 않은 채널입니다. ⚠️", description = "확인 부탁드립니다.", color = discord.Color.red())
             await ctx.send(embed = embed)
