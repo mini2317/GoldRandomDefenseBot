@@ -1,4 +1,5 @@
 from dataBasic import *
+
 class GuildData:
     @staticmethod
     def get(guildId):

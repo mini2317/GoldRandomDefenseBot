@@ -50,6 +50,11 @@ class UserData:
             SET streak = {user[UserDataIdx.streak] + 1}
             WHERE userId = '{userId}'
         ''')
+        cur.execute(f'''
+            UPDATE "{USER_MASTER}"
+            SET solvedCnt = {user[UserDataIdx.solvedCnt] + 1}
+            WHERE userId = '{userId}'
+        ''')
         if user[UserDataIdx.streak] + 1 > user[UserDataIdx.longestStreak]:
             cur.execute(f'''
                 UPDATE "{USER_MASTER}"

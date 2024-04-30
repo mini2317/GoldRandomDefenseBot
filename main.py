@@ -204,6 +204,7 @@ async def 도움(ctx, *arg):
     embed.add_field(name = "소개", value = "이 봇에 대한 기본적인 정보들을 알아보세요!", inline = False)
     embed.add_field(name = "가입", value = "가입해서 매일 나오는 문제들을 풀어보세요!", inline = False)
     embed.add_field(name = "탈퇴", value = "탈퇴하여 기능의 일부를 이용하지 않습니다.", inline = False)
+    embed.add_field(name = "정보", value = "사용자의 정보를 봅니다.", inline = False)
     embed.add_field(name = "알림", value = "알림에 관한 도움말을 봅니다.", inline = False)
     await ctx.send(embed = embed)
 
@@ -256,6 +257,26 @@ async def 탈퇴(ctx, *arg):
     else:
         embed = discord.Embed(
             title = "⚠️ 탈퇴 실패 ⚠️",
+            description='가입되어 있지 않습니다.',
+            color = discord.Color.red()
+        )
+        await ctx.send(embed = embed)
+
+@bot.command(name = "정보")
+async def 정보(ctx, *arg):
+    if UserData.get(ctx.author.id):
+        embed = discord.Embed(
+            title = f"📒 {ctx.author.name} ({UserData.get(ctx.author.id)[UserDataIdx.handle]}) 님의 정보 📒",
+            color = GOLD_COLOR
+        )
+        embed.add_field(name = "🔥 현재 스트릭 🔥", value = f"{UserData.get(ctx.author.id)[UserDataIdx.streak]} 일", inline = False)
+        embed.add_field(name = "✨ 최장 스트릭 ✨", value = f"{UserData.get(ctx.author.id)[UserDataIdx.longestStreak]} 일", inline = False)
+        embed.add_field(name = "🪙 골드 🪙", value = f"{UserData.get(ctx.author.id)[UserDataIdx.gold]} 골드", inline = False)
+        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = f"{UserData.get(ctx.author.id)[UserDataIdx.solvedCnt]} 개", inline = False)
+        await ctx.send(embed = embed)
+    else:
+        embed = discord.Embed(
+            title = "⚠️ 정보 조회 실패 ⚠️",
             description='가입되어 있지 않습니다.',
             color = discord.Color.red()
         )
