@@ -1,31 +1,32 @@
 from discord.ext import tasks, commands
 from discord.ui import View
 import discord, datetime
-from dataControl import *
-from problemClass import *
+from problemData import *
+from guildData import *
+from userData import *
 
 bot = commands.Bot(command_prefix='ㄱ', intents = discord.Intents.all())
 bot.remove_command('help')
 initializeDataBase()
 
 def addGuildWithDefaultChannel(guild):
-    if not getGuild(guild.id):
+    if not GuildData.get(guild.id):
         for channel in guild.channels:
             if channel.type == discord.ChannelType.text:
-                addGuild(guild.id, channel.id)
+                GuildData.add(guild.id, channel.id)
                 break
         else:
-            addGuild(guild.id, -1)
+            GuildData.add(guild.id, -1)
 
 async def alertToGuilds(problem : Problem):
     for guild in bot.guilds:
         addGuildWithDefaultChannel(guild)
-        if getGuild(guild.id)[0][2]:
-            nowGuild = getGuild(guild.id)[0]
+        if GuildData.get(guild.id)[0][2]:
+            nowGuild = GuildData.get(guild.id)[0]
             if nowGuild[1] == -1:
                 for channel in guild.channels:
                     if channel.type == discord.ChannelType.text:
-                        changeGuildNotionChannel(guild.id, channel.id)
+                        GuildData.changeNotionChannel(guild.id, channel.id)
                         break
                 else:
                     return
@@ -47,7 +48,7 @@ class RegisterUser(View):
         if self.disabled or (not interaction.user.id == user.id):
             return
         self.disabled = True
-        addUser(user.id, self.arg[0])
+        UserData.add(user.id, self.arg[0])
         embed = discord.Embed(
             title = "✅ 가입 완료 ✅",
             description = '가입 성공! 응원하겠습니다!',
@@ -68,7 +69,7 @@ class DeleteUser(View):
         if self.disabled or (not interaction.user.id == user.id):
             return
         self.disabled = True
-        deleteUser(user.id)
+        UserData.delete(user.id)
         embed = discord.Embed(
             title = "✅ 탈퇴 성공",
             description = '탈퇴에 성공하였습니다!',
@@ -95,9 +96,10 @@ async def 개발자(ctx, *arg):
     embed = discord.Embed(title = f"개발자 도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "핑", value = "핑을 보냄", inline = False)
     embed.add_field(name = "제거 <문제 번호>", value = "해당 문제를 데이터베이스에서 제거", inline = False)
-    embed.add_field(name = "테스트", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
-    embed.add_field(name = "재구성", value = "sql 데이터 베이스를 엎어버린 후 api를 통해 다시 문제들을 가져옴", inline = False)
-    embed.add_field(name = "테이블 재구성", value = "sql 데이터 베이스 자체의 구조를 바꾼대로 구성하며, 다시 문제를 채워넣음", inline = False)
+    embed.add_field(name = "뽑기", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
+    embed.add_field(name = "문제 제구성", value = "문제 테이블을 drop한 후 다시 문제를 채워넣습니다.", inline = False)
+    embed.add_field(name = "전체 재구성", value = "모든 테이블을 drop한 후 다시 구성합니다. 다시 문제도 다시 채워넣습니다.", inline = False)
+    embed.add_field(name = "리필", value = "문제 json파일을 로컬 테이블로부터 정보를 가져와 채워넣습니다.", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command()
@@ -110,39 +112,41 @@ async def 제거(ctx, *arg):
     if not len(arg): return
     if ctx.author.id in BOT_ADMINS_ID:
         await ctx.send(f'``{arg[0]}제거 시도``')
-        deleteProblemFromTable(int(arg[0]))
+        ProblemData.deleteById(int(arg[0]))
         await ctx.send(f'``{arg[0]}제거 완료``')
 
 @bot.command()
-async def 테스트(ctx):
+async def 뽑기(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
-        problem = getRandomProblem()
+        problem = ProblemData.getRandomProblem()
         await alertToGuilds(problem)
 
 @bot.command()
-async def 재구성(ctx):
-    if ctx.author.id in BOT_ADMINS_ID:
-        await ctx.send(f'``데이터 베이스 초기화 후 api에서 다시 정보를 가져오는 중..``')
-        renewOriginalProblems()
-        await ctx.send(f'``데이터베이스가 초기화 된 후 업데이트되었습니다!``')
-
-@bot.command()
-async def 테이블(ctx, *arg):
+async def 문제(ctx, *arg):
     if ctx.author.id in BOT_ADMINS_ID:
         if not len(arg): return
         if arg[0] != "재구성": return
-        await ctx.send(f'``데이터베이스가 초기화 시작``')
+        await ctx.send(f'``문제 테이블 제거 후 api에서 다시 정보를 가져오는 중..``')
+        ProblemData.remakeDatabaseTable()
+        await ctx.send(f'``문제 테이블이 성공적으로 재구성되었습니다!``')
+
+@bot.command()
+async def 전체(ctx, *arg):
+    if ctx.author.id in BOT_ADMINS_ID:
+        if not len(arg): return
+        if arg[0] != "재구성": return
+        await ctx.send(f'``데이터베이스 초기화 시작``')
         dropEveryDataBases()
         await ctx.send(f'``테이블 구조 재구성 중...``')
         initializeDataBase()
         await ctx.send(f'``문제를 가져오는 중...``')
-        renewOriginalProblems()
+        ProblemData.remakeDatabaseTable()
         await ctx.send(f'``데이터베이스 테이블이 성공적으로 재구성되었습니다!``')
 
 @bot.command()
 async def 리필(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
-        renewProblems()
+        ProblemData.refillJson()
         await ctx.send(f'``json이 초기화 된 후 다시 업데이트되었습니다!``')
 
 @bot.command(name = "도움")
@@ -168,7 +172,7 @@ async def 가입(ctx, *arg):
         embed = discord.Embed(title = f"가입 커맨드 사용법", description = "ㄱ가입 <solved.ac 핸들링>", color = GOLD_COLOR)
         await ctx.send(embed = embed)
         return
-    if not getUser(ctx.author.id):
+    if not UserData.get(ctx.author.id):
         embed = discord.Embed(
             title = f"🔔 가입 🔔",
             description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 계정이라는 것에 대해 별다른 인증은 하지 않으나, 공부를 위한 봇인만큼 본인 핸들링을 이용해주시면 좋겠습니다!",
@@ -185,7 +189,7 @@ async def 가입(ctx, *arg):
 
 @bot.command(name = "탈퇴")
 async def 탈퇴(ctx, *arg):
-    if getUser(ctx.author.id):
+    if UserData.get(ctx.author.id):
         embed = discord.Embed(
             title = f"🔔 탈퇴 🔔",
             description = "탈퇴해서 문제를 더 이상 받지 않습니다.",
@@ -213,9 +217,9 @@ async def 알림(ctx, *arg):
     if arg[0] in ["끄기", "켜기"]:
         addGuildWithDefaultChannel(ctx.guild)
         if arg[0] == "켜기":
-            turnOnGuildNotion(ctx.guild.id)
+            GuildData.turnOnNotion(ctx.guild.id)
         else:
-            turnOffGuildNotion(ctx.guild.id)
+            GuildData.turnOffNotion(ctx.guild.id)
         if arg[0] == "켜기":
             embed = discord.Embed(title = f"이 서버에서 봇의 알림을 켰습니다!", description = "이제 이 서버에 알림을 보내드립니다!", color = GOLD_COLOR)
         else:
@@ -236,7 +240,7 @@ async def 알림(ctx, *arg):
             return
         for channel in ctx.guild.channels:
             if channel.id == channelId:
-                changeGuildNotionChannel(ctx.guild.id, channelId)
+                GuildData.changeNotionChannel(ctx.guild.id, channelId)
                 embed = discord.Embed(title = f"알림 채널을 변경하였습니다!", description = f"{arg[1]} 에 알림을 보냅니다!", color = GOLD_COLOR)
                 break
         else:
@@ -251,7 +255,8 @@ async def alertEveryday():
     second = now.second
     tester = second % 10 == -1
     if tester or second + minute + hour == 0:
-        problemId, tier = getRandomProblem()
-        await alertToGuilds(problemId, tier)
+        checkUserSolved()
+        problemId = ProblemData.popRandomProblem()
+        await alertToGuilds(problemId)
 
 bot.run(TOKEN)

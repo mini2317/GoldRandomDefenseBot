@@ -7,3 +7,7 @@ class Problem:
     
     def __call__(self, key):
         return self.info[key]
+
+def checkUserSolved(userHandling, problemId):
+    response = requests.get(f"https://solved.ac/api/v3/search/problem?query=(id:{problemId})@{userHandling}")
+    return bool(json.loads(response.text)['count'])
