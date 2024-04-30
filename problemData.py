@@ -54,6 +54,7 @@ class ProblemData:
             con.close()
             return
         tmp = []
+        siteProblems = dict()
         for i in range(localProblemCnt, siteProblemCnt):
             if i % 50 == 0:
                 print(f'데이터 로드 : {(i - localProblemCnt) / (siteProblemCnt - localProblemCnt) * 100} % ({i} / {siteProblemCnt - localProblemCnt}) 완료')

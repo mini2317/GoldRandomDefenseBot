@@ -43,6 +43,8 @@ class UserData:
     @staticmethod
     def updateStreak(userId):
         user = UserData.get(userId)
+        if not user:
+            return False
         con = sqlite3.connect(DATABASE_PATH)
         cur = con.cursor()
         cur.execute(f'''
@@ -63,6 +65,7 @@ class UserData:
             ''')
         con.commit()
         con.close()
+        return True
     
     @staticmethod
     def resetStreak(userId):

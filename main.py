@@ -132,8 +132,9 @@ async def 개발자(ctx, *arg):
     embed = discord.Embed(title = f"개발자 도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "핑", value = "핑을 보냄", inline = False)
     embed.add_field(name = "문제제거 <문제 번호>", value = "해당 문제를 데이터베이스에서 제거", inline = False)
-    embed.add_field(name = "스트릭증가", value = "사용자의 스트릭을 1 증가시킵니다.", inline = False)
-    embed.add_field(name = "스트릭리셋", value = "사용자의 스트릭을 0으로 설정합니다.", inline = False)
+    embed.add_field(name = "스트릭 증가", value = "사용자의 스트릭을 1 증가시킵니다.", inline = False)
+    embed.add_field(name = "스트릭 리셋", value = "사용자의 스트릭을 0으로 설정합니다.", inline = False)
+    embed.add_field(name = "스트릭 하루", value = "하루 후의 스트릭 연산을 시전합니다.", inline = False)
     embed.add_field(name = "골드증가 <숫자>", value = "사용자의 골드가 <숫자>만큼 증가합니다.", inline = False)
     embed.add_field(name = "리워드", value = "사용자의 골드가 리워드만큼 증가합니다.", inline = False)
     embed.add_field(name = "뽑기", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
@@ -148,18 +149,20 @@ async def 핑(ctx):
         await ctx.send(f'``{bot.latency * 1000}ms``')
 
 @bot.command()
-async def 스트릭증가(ctx):
-    if ctx.author.id in BOT_ADMINS_ID:
-        await ctx.send(f'``스트릭을 증가시킵니다.``')
-        UserData.updateStreak(ctx.author.id)
-        await ctx.send(f'``스트릭 증가 성공``')
-
-@bot.command()
-async def 스트릭리셋(ctx):
-    if ctx.author.id in BOT_ADMINS_ID:
-        await ctx.send(f'``스트릭을 리셋시킵니다.``')
-        UserData.resetStreak(ctx.author.id)
-        await ctx.send(f'``스트릭 리셋 성공``')
+async def 스트릭(ctx, *arg):
+    if ctx.author.id in BOT_ADMINS_ID and arg:
+        if arg[0] == "증가":
+            await ctx.send(f'``스트릭을 증가시킵니다.``')
+            UserData.updateStreak(ctx.author.id)
+            await ctx.send(f'``스트릭 증가 성공``')
+        elif arg[0] == "리셋":
+            await ctx.send(f'``스트릭을 리셋시킵니다.``')
+            UserData.resetStreak(ctx.author.id)
+            await ctx.send(f'``스트릭 리셋 성공``')
+        elif arg[0] == "하루":
+            await ctx.send(f'``이 상태로 하루가 끝났을 때의 연산 시행``')
+            UserData.updateUsersStreak(getFromJson(PROBLEM_OF_TODAY_JSON_PATH)["problemId"])
+            await ctx.send(f'``스트릭 연산 성공``')
 
 @bot.command()
 async def 골드증가(ctx, *arg):
@@ -230,6 +233,8 @@ async def 도움(ctx, *arg):
     embed.add_field(name = "탈퇴", value = "탈퇴하여 기능의 일부를 이용하지 않습니다.", inline = False)
     embed.add_field(name = "정보", value = "사용자의 정보를 봅니다.", inline = False)
     embed.add_field(name = "랭킹", value = "전체 사용자들의 랭킹을 봅니다.", inline = False)
+    embed.add_field(name = "서버랭킹", value = "서버 사용자들의 랭킹을 봅니다.", inline = False)
+    embed.add_field(name = "오늘 문제", value = "오늘의 골드 문제를 봅니다.", inline = False)
     embed.add_field(name = "알림", value = "알림에 관한 도움말을 봅니다.", inline = False)
     await ctx.send(embed = embed)
 
@@ -364,6 +369,21 @@ async def 서버랭킹(ctx, *arg):
             embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
     await ctx.send(embed = embed)
 
+@bot.command()
+async def 오늘(ctx, *arg):
+    if not arg:
+        embed = discord.Embed(title = f"오늘 문제 커맨드 사용법", description = "ㄱ오늘 문제", color = GOLD_COLOR)
+        await ctx.send(embed = embed)
+        return
+    if arg[0] != "문제":
+        embed = discord.Embed(title = f"오늘 문제 커맨드 사용법", description = "ㄱ오늘 문제", color = GOLD_COLOR)
+        await ctx.send(embed = embed)
+        return
+    problem = getFromJson(PROBLEM_OF_TODAY_JSON_PATH)
+    embed = discord.Embed(title = "오늘의 골드 문제입니다!", description = f"[{problem['problemId']} - {problem['titleKo']}](https://www.acmicpc.net/problem/{problem['problemId']})", color = GOLD_COLOR)
+    embed.set_thumbnail(url = GOLD_IMAGE[15 - problem["level"]])
+    await ctx.send(embed = embed)
+
 @bot.command(name = "알림")
 async def 알림(ctx, *arg):
     if not arg: 
@@ -418,7 +438,7 @@ async def alertEveryday():
     second = now.second
     tester = second % 10 == -1
     if tester or second + minute + hour == 0:
-        checkUserSolved()
+        UserData.updateUsersStreak(getFromJson(PROBLEM_OF_TODAY_JSON_PATH)["problemId"])
         problemId = ProblemData.popRandomProblem()
         await setProblemOfTodayAndAlert(problemId)
 
