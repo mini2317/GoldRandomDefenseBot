@@ -213,6 +213,7 @@ async def 도움(ctx, *arg):
     embed.add_field(name = "가입", value = "가입해서 매일 나오는 문제들을 풀어보세요!", inline = False)
     embed.add_field(name = "탈퇴", value = "탈퇴하여 기능의 일부를 이용하지 않습니다.", inline = False)
     embed.add_field(name = "정보", value = "사용자의 정보를 봅니다.", inline = False)
+    embed.add_field(name = "랭킹", value = "전체 사용자들의 랭킹을 봅니다.", inline = False)
     embed.add_field(name = "알림", value = "알림에 관한 도움말을 봅니다.", inline = False)
     await ctx.send(embed = embed)
 
@@ -289,6 +290,43 @@ async def 정보(ctx, *arg):
             color = discord.Color.red()
         )
         await ctx.send(embed = embed)
+
+@bot.command(name = "랭킹")
+async def 랭킹(ctx, *arg):
+    def sortBy(userInfos, option : UserDataIdx, count = 5):
+        units = {
+            UserDataIdx.streak : "일",
+            UserDataIdx.longestStreak : "일",
+            UserDataIdx.gold : "골드",
+            UserDataIdx.solvedCnt : "개"
+        }
+        count = min(count, len(UserData.getEveryUsers()))
+        s = sorted(userInfos, key = lambda x: x[option])
+        idOfUsers = tuple(map(lambda x : x[UserDataIdx.userId], s))
+        tmp = '\n'.join(f'**{i + 1}위**. {bot.get_user(idOfUsers[i]).name} ({s[i][UserDataIdx.handle]}) - {s[i][option]} {units[option]}' for i in range(count))
+        if ctx.author.id in idOfUsers[:count]:
+            idx = idOfUsers.index(ctx.author.id)
+            tmp += f'\n\n**{idx + 1}위** (상위 {"%.2f" % ((idx + 1) / len(idOfUsers) * 100)}%). {ctx.author.name} ({s[idx][UserDataIdx.handle]}) - {s[idx][option]} {units[option]}'
+        return tmp
+    if arg:
+        if arg[0] == "서버":
+            embed = discord.Embed(
+                title = f"🏆 {ctx.guild.name} 서버의 랭킹 🏆",
+                color = GOLD_COLOR
+            )
+            memebersId = tuple(map(lambda x: x.id, ctx.guild.members))
+            userInfos = [user for user in UserData.getEveryUsers() if user[UserDataIdx.userId] in memebersId]
+    else:
+        embed = discord.Embed(
+            title = f"🌐 전체 이용자 랭킹 🌐",
+            color = GOLD_COLOR
+        )
+        userInfos = UserData.getEveryUsers()
+    embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortBy(userInfos, UserDataIdx.streak), inline = False)
+    embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortBy(userInfos, UserDataIdx.longestStreak), inline = False)
+    embed.add_field(name = "🪙 골드 🪙", value = sortBy(userInfos, UserDataIdx.gold), inline = False)
+    embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortBy(userInfos, UserDataIdx.solvedCnt), inline = False)
+    await ctx.send(embed = embed)
 
 @bot.command(name = "알림")
 async def 알림(ctx, *arg):
