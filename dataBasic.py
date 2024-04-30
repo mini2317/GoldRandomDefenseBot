@@ -1,5 +1,6 @@
-import os, sqlite3, requests, json, random
+import os, sqlite3, json
 from problemRequest import *
+from userRequest import *
 from enum import Enum
 
 DATABASE_PATH = os.path.join('.','data','data.db')
@@ -27,7 +28,7 @@ GOLD_IMAGE = [
 
 class UserDataIdx(Enum):
     userId = 0
-    handling = 1
+    handle = 1
     streak = 2
     longestStreak = 3
     gold = 4
@@ -80,7 +81,7 @@ def initializeDataBase():
     cur = con.cursor()
     tableExist = cur.execute(f"SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     if not any(map(lambda x : x[0] == USER_MASTER or USER_MASTER == f"'{x[0]}'", tableExist)):
-        cur.execute(f'''CREATE TABLE {USER_MASTER} (userId INT, handling TEXT, streak INT, longestStreak INT, gold INT, solvedCnt INT)''')
+        cur.execute(f'''CREATE TABLE {USER_MASTER} (userId INT, handle TEXT, streak INT, longestStreak INT, gold INT, solvedCnt INT)''')
     if not any(map(lambda x : x[0] == GUILD_MASTER or GUILD_MASTER == f"'{x[0]}'", tableExist)):
         cur.execute(f'''CREATE TABLE {GUILD_MASTER} (guildId INT, channelId INT, canNotion INT)''')
     if not any(map(lambda x : x[0] == PROBLEM_LOCAL_SRC or PROBLEM_LOCAL_SRC == f"'{x[0]}'", tableExist)):

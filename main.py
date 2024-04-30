@@ -45,6 +45,14 @@ class RegisterUser(View):
     @discord.ui.button(label = "확인", style = discord.ButtonStyle.primary, emoji = "✅")
     async def ok(self, interaction, button):
         user = self.ctx.author
+        if UserData.get(user.id):
+            embed = discord.Embed(
+                title = "⚠️ 가입 실패 ⚠️",
+                description='이미 가입되어 있는 유저입니다!',
+                color = discord.Color.red()
+            )
+            await self.ctx.send(embed = embed)
+            return
         if self.disabled or (not interaction.user.id == user.id):
             return
         self.disabled = True
@@ -65,6 +73,14 @@ class DeleteUser(View):
     
     @discord.ui.button(label = "확인", style = discord.ButtonStyle.primary, emoji = "✅")
     async def ok(self, interaction, button):
+        if UserData.get(user.id):
+            embed = discord.Embed(
+                title = "⚠️ 가입 실패 ⚠️",
+                description='이미 가입되어 있는 유저입니다!',
+                color = discord.Color.red()
+            )
+            await self.ctx.send(embed = embed)
+            return
         user = self.ctx.message.author
         if self.disabled or (not interaction.user.id == user.id):
             return
@@ -118,7 +134,7 @@ async def 제거(ctx, *arg):
 @bot.command()
 async def 뽑기(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
-        problem = ProblemData.getRandomProblem()
+        problem = ProblemData.popRandomProblem()
         await alertToGuilds(problem)
 
 @bot.command()
@@ -169,13 +185,22 @@ async def 도움(ctx, *arg):
 @bot.command(name = "가입")
 async def 가입(ctx, *arg):
     if not arg: 
-        embed = discord.Embed(title = f"가입 커맨드 사용법", description = "ㄱ가입 <solved.ac 핸들링>", color = GOLD_COLOR)
+        embed = discord.Embed(title = f"가입 커맨드 사용법", description = "ㄱ가입 <solved.ac 핸들>", color = GOLD_COLOR)
         await ctx.send(embed = embed)
         return
     if not UserData.get(ctx.author.id):
+        user = User(arg[0])
+        if user.info is None:
+            embed = discord.Embed(
+                title = "⚠️ 가입 실패 ⚠️",
+                description='존재하지 않는 핸들입니다!',
+                color = discord.Color.red()
+            )
+            await ctx.send(embed = embed)
+            return
         embed = discord.Embed(
             title = f"🔔 가입 🔔",
-            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 계정이라는 것에 대해 별다른 인증은 하지 않으나, 공부를 위한 봇인만큼 본인 핸들링을 이용해주시면 좋겠습니다!",
+            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 계정이라는 것에 대해 별다른 인증은 하지 않으나, 공부를 위한 봇인만큼 본인 핸들을 이용해주시면 좋겠습니다!",
             color = GOLD_COLOR
         )
         await ctx.send(embed = embed, view = RegisterUser(ctx, arg))
@@ -183,7 +208,7 @@ async def 가입(ctx, *arg):
         embed = discord.Embed(
             title = "⚠️ 가입 실패 ⚠️",
             description='이미 가입되어 있는 유저입니다!',
-            color = 0xed2b2a
+            color = discord.Color.red()
         )
         await ctx.send(embed = embed)
 
@@ -210,10 +235,12 @@ async def 알림(ctx, *arg):
         embed = discord.Embed(title = f"알림 커맨드 사용법", description = "ㄱ알림 채널 <채널>\nㄱ알림 끄기\nㄱ알림 켜기", color = GOLD_COLOR)
         await ctx.send(embed = embed)
         return
+    
     if arg[0] == "채널" and len(arg) == 1:
         embed = discord.Embed(title = f"알림 채널 커맨드 사용법", description = "ㄱ알림 채널 <채널>", color = GOLD_COLOR)
         await ctx.send(embed = embed)
         return
+    
     if arg[0] in ["끄기", "켜기"]:
         addGuildWithDefaultChannel(ctx.guild)
         if arg[0] == "켜기":
@@ -226,6 +253,7 @@ async def 알림(ctx, *arg):
             embed = discord.Embed(title = f"이 서버에서 봇의 알림을 껐습니다!", description = "더 이상 이 서버에는 알림을 보내지 않습니다!", color = GOLD_COLOR)
         await ctx.send(embed = embed)
         return
+    
     if arg[0] == "채널":
         addGuildWithDefaultChannel(ctx.guild)
         if len(arg[1]) < 4:

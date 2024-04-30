@@ -20,19 +20,22 @@ class UserData:
             SELECT *
             FROM "{USER_MASTER}"
             WHERE userId = {userId};
-        ''').fetchall()[0]
+        ''').fetchall()
         con.commit()
         con.close()
-        return search
+        if search:
+            return search[0]
+        else:
+            return False
     
     @staticmethod
-    def add(userId, handling):
+    def add(userId, handle):
         con = sqlite3.connect(DATABASE_PATH)
         cur = con.cursor()
         cur.execute(f'''
             INSERT
-            INTO "{USER_MASTER}" (userId, handling, streak, longestStreak, gold, solvedCnt)
-            VALUES ("{userId}", "{handling}", 0, 0, 0, 0)
+            INTO "{USER_MASTER}" (userId, handle, streak, longestStreak, gold, solvedCnt)
+            VALUES ("{userId}", "{handle}", 0, 0, 0, 0)
         ''')
         con.commit()
         con.close()
@@ -96,7 +99,7 @@ class UserData:
     @staticmethod   
     def updateUsersStreak(problemId):
         for user in UserData.getEveryUsers():
-            if checkUserSolved(user[UserDataIdx.handling], problemId):
+            if checkUserSolved(user[UserDataIdx.handle], problemId):
                 UserData.updateStreak(user[UserDataIdx.userId])
             else:
                 UserData.resetStreak(user[UserDataIdx.userId])

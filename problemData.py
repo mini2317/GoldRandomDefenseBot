@@ -1,4 +1,6 @@
 from dataBasic import *
+import random
+
 class ProblemData:
     @staticmethod
     def remakeDatabaseTable():
