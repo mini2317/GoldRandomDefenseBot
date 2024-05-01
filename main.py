@@ -294,15 +294,30 @@ async def 탈퇴(ctx, *arg):
 
 @bot.command(name = "정보")
 async def 정보(ctx, *arg):
-    if UserData.get(ctx.author.id):
+    target = ctx.author
+    if arg:
+        query = ' '.join(arg)
+        for member in ctx.guild.members:
+            if not UserData.get(member.id):
+                continue
+            if member.mention == query:
+                target = member
+                break
+            if member.name == query:
+                target = member
+                break
+            if member.nick == query:
+                target = member
+                break
+    if UserData.get(target.id):
         embed = discord.Embed(
-            title = f"📒 {ctx.author.name} ({UserData.get(ctx.author.id)[UserDataIdx.handle]}) 님의 정보 📒",
+            title = f"📒 {target.name} ({UserData.get(target.id)[UserDataIdx.handle]}) 님의 정보 📒",
             color = GOLD_COLOR
         )
-        embed.add_field(name = "🔥 현재 스트릭 🔥", value = f"{UserData.get(ctx.author.id)[UserDataIdx.streak]} 일", inline = False)
-        embed.add_field(name = "✨ 최장 스트릭 ✨", value = f"{UserData.get(ctx.author.id)[UserDataIdx.longestStreak]} 일", inline = False)
-        embed.add_field(name = "🪙 골드 🪙", value = f"{UserData.get(ctx.author.id)[UserDataIdx.gold]} 골드", inline = False)
-        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = f"{UserData.get(ctx.author.id)[UserDataIdx.solvedCnt]} 개", inline = False)
+        embed.add_field(name = "🔥 현재 스트릭 🔥", value = f"{UserData.get(target.id)[UserDataIdx.streak]} 일", inline = False)
+        embed.add_field(name = "✨ 최장 스트릭 ✨", value = f"{UserData.get(target.id)[UserDataIdx.longestStreak]} 일", inline = False)
+        embed.add_field(name = "🪙 골드 🪙", value = f"{UserData.get(target.id)[UserDataIdx.gold]} 골드", inline = False)
+        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = f"{UserData.get(target.id)[UserDataIdx.solvedCnt]} 개", inline = False)
         await ctx.send(embed = embed)
     else:
         embed = discord.Embed(
@@ -325,13 +340,13 @@ async def 랭킹(ctx, *arg):
         embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
         embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
     else:
-        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ"]:
+        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ", "스", "ㅅ", "현"]:
             embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
-        elif arg[0] in ["최장", "ㅊㅈ"]:
+        elif arg[0] in ["최장", "ㅊㅈ", "ㅊ", "최", "장", "ㅈ"]:
             embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
-        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ"]:
+        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ", "ㄱ", "골"]:
             embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
-        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ"]:
+        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ", "문"]:
             embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
         else:
             embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
@@ -354,13 +369,13 @@ async def 서버랭킹(ctx, *arg):
         embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
         embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
     else:
-        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ"]:
+        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ", "스", "ㅅ", "현"]:
             embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
-        elif arg[0] in ["최장", "ㅊㅈ"]:
+        elif arg[0] in ["최장", "ㅊㅈ", "ㅊ", "최", "장", "ㅈ"]:
             embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
-        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ"]:
+        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ", "ㄱ", "골"]:
             embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
-        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ"]:
+        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ", "문"]:
             embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
         else:
             embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
