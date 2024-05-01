@@ -310,7 +310,7 @@ async def 도움(ctx, *arg):
 async def 초대링크(ctx, *arg):
     embed = discord.Embed(title = f"초대링크 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "감사의 말", value = "이용해주셔서 감사드립니다! <:fhbt:1159345785528385606>", inline = False)
-    embed.add_field(name = "초대링크", value = "https://discord.com/oauth2/authorize?client_id=1217056704101875722&permissions=3072&scope=bot", inline = False)
+    embed.add_field(name = "초대링크", value = "[초대링크](https://discord.com/oauth2/authorize?client_id=1217056704101875722&permissions=3072&scope=bot)", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "문의")
