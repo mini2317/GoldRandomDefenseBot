@@ -1,4 +1,4 @@
-import os, sqlite3, json
+import os, sqlite3, json, datetime, shutil
 from problemRequest import *
 from userRequest import *
 from enum import IntEnum
@@ -92,5 +92,14 @@ def initializeDataBase():
         cur.execute(f'''CREATE TABLE {GUILD_MASTER} (guildId INT, channelId INT, canNotion INT)''')
     if not any(map(lambda x : x[0] == PROBLEM_LOCAL_SRC or PROBLEM_LOCAL_SRC == f"'{x[0]}'", tableExist)):
         cur.execute(f'''CREATE TABLE {PROBLEM_LOCAL_SRC} (problemId INT)''')
+    con.commit()
+    con.close()
+
+def backupDatabase():
+    backupFile = os.path.join('.', 'backup', datetime.datetime.now().isoformat().replace(*"-_").replace(*":_").replace(*"._") + ".db")
+    shutil.copyfile(DATABASE_PATH, backupFile)
+    con = sqlite3.connect(backupFile)
+    cur = con.cursor()
+    cur.execute(f"DROP TABLE '{PROBLEM_LOCAL_SRC}'")
     con.commit()
     con.close()

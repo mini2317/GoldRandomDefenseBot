@@ -24,6 +24,54 @@ def sortRank(userInfos, userId, option : UserDataIdx, count = 5) -> str:
         tmp += f'\n\n**{idx + 1}위** (상위 {"%.2f" % ((idx + 1) / len(idOfUsers) * 100)}%). {bot.get_user(userId).name} ({s[idx][UserDataIdx.handle]}) - {s[idx][option]} {units[option]}'
     return tmp
 
+def displayRank(ctx, arg, embed, userInfos):
+    if not arg:
+        embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
+        embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
+        embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
+        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
+    else:
+        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ", "스", "ㅅ", "현"]:
+            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
+        elif arg[0] in ["최장", "ㅊㅈ", "ㅊ", "최", "장", "ㅈ"]:
+            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
+        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ", "ㄱ", "골"]:
+            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
+        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ", "문"]:
+            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
+        else:
+            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
+            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
+            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
+            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
+
+def getTargetUser(ctx, arg):
+    target = ctx.author
+    if arg:
+        query = ' '.join(arg)
+        for member in UserData.getEveryUsers():
+            member = bot.get_user(member[UserDataIdx.userId])
+            if member.id == query:
+                target = member
+                break
+            if member.mention == query:
+                target = member
+                break
+            if member.name == query:
+                target = member
+                break
+            if str(member.id) == query:
+                target = member
+                break
+        else:
+            for member in ctx.author.guild.members:
+                if not UserData.get(member.id):
+                    continue
+                if member.nick == query:
+                    target = member
+                    break
+    return target
+
 def addGuildWithDefaultChannel(guild):
     if not GuildData.get(guild.id):
         for channel in guild.channels:
@@ -132,35 +180,44 @@ async def 개발자(ctx, *arg):
     embed = discord.Embed(title = f"개발자 도움 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
     embed.add_field(name = "핑", value = "핑을 보냄", inline = False)
     embed.add_field(name = "문제제거 <문제 번호>", value = "해당 문제를 데이터베이스에서 제거", inline = False)
-    embed.add_field(name = "스트릭 증가", value = "사용자의 스트릭을 1 증가시킵니다.", inline = False)
-    embed.add_field(name = "스트릭 리셋", value = "사용자의 스트릭을 0으로 설정합니다.", inline = False)
-    embed.add_field(name = "스트릭 하루", value = "하루 후의 스트릭 연산을 시전합니다.", inline = False)
-    embed.add_field(name = "골드증가 <숫자>", value = "사용자의 골드가 <숫자>만큼 증가합니다.", inline = False)
-    embed.add_field(name = "리워드", value = "사용자의 골드가 리워드만큼 증가합니다.", inline = False)
+    embed.add_field(name = "스트릭 증가 [타겟]", value = "사용자의 스트릭을 1 증가시킵니다.", inline = False)
+    embed.add_field(name = "스트릭 리셋 [타겟]", value = "사용자의 스트릭을 0으로 설정합니다.", inline = False)
+    embed.add_field(name = "스트릭 하루", value = "하루 후의 스트릭 연산을 모든 유저에게 시전합니다. **(+백업)**", inline = False)
+    embed.add_field(name = "골드증가 <숫자> [타겟]", value = "사용자의 골드가 <숫자>만큼 증가합니다.", inline = False)
+    embed.add_field(name = "리워드 [타겟]", value = "사용자의 골드가 리워드만큼 증가합니다.", inline = False)
     embed.add_field(name = "뽑기", value = "무작위 골드 문제를 내서 모든 서버에 알림을 보냄", inline = False)
-    embed.add_field(name = "문제 제구성", value = "문제 테이블을 drop한 후 다시 문제를 채워넣습니다.", inline = False)
-    embed.add_field(name = "전체 재구성", value = "모든 테이블을 drop한 후 다시 구성합니다. 다시 문제도 다시 채워넣습니다.", inline = False)
+    embed.add_field(name = "문제 재구성", value = "문제 테이블을 drop한 후 다시 문제를 채워넣습니다. **(+백업)**", inline = False)
+    embed.add_field(name = "전체 재구성", value = "모든 테이블을 drop한 후 다시 구성합니다. 다시 문제도 다시 채워넣습니다. **(+백업)**", inline = False)
     embed.add_field(name = "리필", value = "문제 json파일을 로컬 테이블로부터 정보를 가져와 채워넣습니다.", inline = False)
+    embed.add_field(name = "백업", value = "백업 파일을 생성합니다.", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command()
 async def 핑(ctx):
     if ctx.author.id in BOT_ADMINS_ID:
         await ctx.send(f'``{bot.latency * 1000}ms``')
+    
+@bot.command()
+async def 백업(ctx):
+    if ctx.author.id in BOT_ADMINS_ID:
+        await ctx.send(f'``백업을 시작합니다.``')
+        backupDatabase()
+        await ctx.send(f'``백업 완료.``')
 
 @bot.command()
 async def 스트릭(ctx, *arg):
     if ctx.author.id in BOT_ADMINS_ID and arg:
         if arg[0] == "증가":
             await ctx.send(f'``스트릭을 증가시킵니다.``')
-            UserData.updateStreak(ctx.author.id)
+            UserData.updateStreak(getTargetUser(ctx, arg[1:]).id)
             await ctx.send(f'``스트릭 증가 성공``')
         elif arg[0] == "리셋":
             await ctx.send(f'``스트릭을 리셋시킵니다.``')
-            UserData.resetStreak(ctx.author.id)
+            UserData.resetStreak(getTargetUser(ctx, arg[1:]).id)
             await ctx.send(f'``스트릭 리셋 성공``')
         elif arg[0] == "하루":
             await ctx.send(f'``이 상태로 하루가 끝났을 때의 연산 시행``')
+            backupDatabase()
             UserData.updateUsersStreak(getFromJson(PROBLEM_OF_TODAY_JSON_PATH)["problemId"])
             await ctx.send(f'``스트릭 연산 성공``')
 
@@ -171,14 +228,14 @@ async def 골드증가(ctx, *arg):
         return
     if ctx.author.id in BOT_ADMINS_ID:
         await ctx.send(f'``골드를 증가시킵니다.``')
-        UserData.addGold(ctx.author.id, int(arg[0]))
+        UserData.addGold(getTargetUser(ctx, arg[1:]).id, int(arg[0]))
         await ctx.send(f'``골드 증가 성공``')
 
 @bot.command()
 async def 리워드(ctx, *arg):
     if ctx.author.id in BOT_ADMINS_ID:
         await ctx.send(f'``리워드를 받습니다.``')
-        reward = UserData.addRewardGold(ctx.author.id)
+        reward = UserData.addRewardGold(getTargetUser(ctx, arg[1:]).id)
         await ctx.send(f'``{reward} 골드 휙득``')
 
 @bot.command()
@@ -202,6 +259,7 @@ async def 문제(ctx, *arg):
     if ctx.author.id in BOT_ADMINS_ID:
         if not len(arg): return
         if arg[0] != "재구성": return
+        backupDatabase()
         await ctx.send(f'``문제 테이블 제거 후 api에서 다시 정보를 가져오는 중..``')
         ProblemData.remakeDatabaseTable()
         await ctx.send(f'``문제 테이블이 성공적으로 재구성되었습니다!``')
@@ -211,6 +269,7 @@ async def 전체(ctx, *arg):
     if ctx.author.id in BOT_ADMINS_ID:
         if not len(arg): return
         if arg[0] != "재구성": return
+        backupDatabase()
         await ctx.send(f'``데이터베이스 초기화 시작``')
         dropEveryDataBases()
         await ctx.send(f'``테이블 구조 재구성 중...``')
@@ -294,21 +353,7 @@ async def 탈퇴(ctx, *arg):
 
 @bot.command(name = "정보")
 async def 정보(ctx, *arg):
-    target = ctx.author
-    if arg:
-        query = ' '.join(arg)
-        for member in ctx.guild.members:
-            if not UserData.get(member.id):
-                continue
-            if member.mention == query:
-                target = member
-                break
-            if member.name == query:
-                target = member
-                break
-            if member.nick == query:
-                target = member
-                break
+    target = getTargetUser(ctx, arg)
     if UserData.get(target.id):
         embed = discord.Embed(
             title = f"📒 {target.name} ({UserData.get(target.id)[UserDataIdx.handle]}) 님의 정보 📒",
@@ -334,25 +379,7 @@ async def 랭킹(ctx, *arg):
         color = GOLD_COLOR
     )
     userInfos = UserData.getEveryUsers()
-    if not arg:
-        embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
-        embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
-        embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
-        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
-    else:
-        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ", "스", "ㅅ", "현"]:
-            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
-        elif arg[0] in ["최장", "ㅊㅈ", "ㅊ", "최", "장", "ㅈ"]:
-            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
-        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ", "ㄱ", "골"]:
-            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
-        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ", "문"]:
-            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
-        else:
-            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
-            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
-            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
-            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
+    displayRank(ctx, arg, embed, userInfos)
     await ctx.send(embed = embed)
 
 @bot.command(name = "서버랭킹")
@@ -363,25 +390,7 @@ async def 서버랭킹(ctx, *arg):
     )
     memebersId = tuple(map(lambda x: x.id, ctx.guild.members))
     userInfos = [user for user in UserData.getEveryUsers() if user[UserDataIdx.userId] in memebersId]
-    if not arg:
-        embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
-        embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
-        embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
-        embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
-    else:
-        if arg[0] in ["스트릭", "현재", "ㅎㅈ", "ㅅㅌㄹ", "스", "ㅅ", "현"]:
-            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak, count = 10), inline = False)
-        elif arg[0] in ["최장", "ㅊㅈ", "ㅊ", "최", "장", "ㅈ"]:
-            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak, count = 10), inline = False)
-        elif arg[0] in ["골드", "돈", "ㄷ", "ㄱㄷ", "ㄱ", "골"]:
-            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold, count = 10), inline = False)
-        elif arg[0] in ["수", "문제", "ㅅ", "ㅁㅈ", "문"]:
-            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt, count = 10), inline = False)
-        else:
-            embed.add_field(name = "🔥 현재 스트릭 🔥", value = sortRank(userInfos, ctx.author.id, UserDataIdx.streak), inline = False)
-            embed.add_field(name = "✨ 최장 스트릭 ✨", value = sortRank(userInfos, ctx.author.id, UserDataIdx.longestStreak), inline = False)
-            embed.add_field(name = "🪙 골드 🪙", value = sortRank(userInfos, ctx.author.id, UserDataIdx.gold), inline = False)
-            embed.add_field(name = "🔑 현재 까지 푼 랜덤 골드 문제 수 🔑", value = sortRank(userInfos, ctx.author.id, UserDataIdx.solvedCnt), inline = False)
+    displayRank(ctx, arg, embed, userInfos)
     await ctx.send(embed = embed)
 
 @bot.command()

@@ -1,9 +1,6 @@
 data/data.db
 data/problems.json
 data/token.txt
-Lib
-Include
-Scripts
-pyvenv.cfg
-__pycache__
 data/problemOfToday.json
+__pycache__
+backup/*
