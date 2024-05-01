@@ -295,6 +295,7 @@ async def 도움(ctx, *arg):
     embed.add_field(name = "서버랭킹", value = "서버 사용자들의 랭킹을 봅니다.", inline = False)
     embed.add_field(name = "오늘 문제", value = "오늘의 골드 문제를 봅니다.", inline = False)
     embed.add_field(name = "알림", value = "알림에 관한 도움말을 봅니다.", inline = False)
+    embed.add_field(name = "초대링크", value = "봇의 초대링크를 받습니다.", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "소개")
@@ -303,6 +304,13 @@ async def 도움(ctx, *arg):
     embed.add_field(name = "개요", value = "이 봇은 비공식으로 제작된 골드 랜덤 디펜스 봇입니다.\n이 봇은 원작자의 요청에 따라 언제든 서비스가 중단될 수 있습니다.", inline = False)
     embed.add_field(name = "서비스 내용", value = "매일 0시에 무작위 골드 문제를 받아보세요!\n가입까지 하신다면 골드 문제 스트릭과 봇 내에서의 재화인 **골드**를 따로 얻으실 수 있습니다.", inline = False)
     embed.add_field(name = "제작자", value = "[@moomin_dev](https://github.com/mini2317)", inline = False)
+    await ctx.send(embed = embed)
+
+@bot.command(name = "초대링크")
+async def 초대링크(ctx, *arg):
+    embed = discord.Embed(title = f"초대링크 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
+    embed.add_field(name = "감사의 말", value = "잘 이용해주셔서 감사드립니다! <:fhbt:1159345785528385606>", inline = False)
+    embed.add_field(name = "초대링크", value = "https://discord.com/oauth2/authorize?client_id=1217056704101875722&permissions=3072&scope=bot", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "가입")
