@@ -2,5 +2,6 @@ data/data.db
 data/problems.json
 data/token.txt
 data/problemOfToday.json
+data/inquiryChannel.txt
 __pycache__
 backup/*

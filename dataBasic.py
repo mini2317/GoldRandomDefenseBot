@@ -11,6 +11,7 @@ PROBLEMS_JSON_PATH = os.path.join('.','data','problems.json')
 PROBLEM_OF_TODAY_JSON_PATH = os.path.join('.','data','problemOfToday.json')
 TOKEN_PATH = os.path.join('.','data','token.txt')
 BOT_ADMINS_ID_PATH = os.path.join('.','data','botAdminsId.txt')
+INQUIRY_PATH = os.path.join('.','data','inquiryChannel.txt')
 
 GOLD_COLOR = 0xec9a00
 GOLD_5_IMAGE = "https://media.discordapp.net/attachments/1175423530054201364/1234465905854120016/11.png?ex=6630d577&is=662f83f7&hm=021e5322d9965a3929696a1347d0d1312962099f4d342da3db84d4ed9f04f075&=&format=webp&quality=lossless&width=600&height=768"
@@ -47,6 +48,9 @@ with open(TOKEN_PATH, 'r', encoding = "UTF-8") as file:
 
 with open(BOT_ADMINS_ID_PATH, 'r', encoding = "UTF-8") as file:
     BOT_ADMINS_ID = tuple(map(int, file.read().split("\n")))
+
+with open(INQUIRY_PATH, 'r', encoding = "UTF-8") as file:
+    INQUIRY_SERVER, INQUIRY_CHANNEL = tuple(map(int, file.read().split("\n")))
 
 def getFromJson(jsonFilePath):
     with open(jsonFilePath, 'r', encoding = "UTF-8") as file: 

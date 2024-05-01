@@ -301,17 +301,30 @@ async def 도움(ctx, *arg):
 @bot.command(name = "소개")
 async def 도움(ctx, *arg):
     embed = discord.Embed(title = f"소개글 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
-    embed.add_field(name = "개요", value = "이 봇은 비공식으로 제작된 골드 랜덤 디펜스 봇입니다.\n이 봇은 원작자의 요청에 따라 언제든 서비스가 중단될 수 있습니다.", inline = False)
-    embed.add_field(name = "서비스 내용", value = "매일 0시에 무작위 골드 문제를 받아보세요!\n가입까지 하신다면 골드 문제 스트릭과 봇 내에서의 재화인 **골드**를 따로 얻으실 수 있습니다.", inline = False)
+    embed.add_field(name = "개요", value = "이 봇은 비공식적으로 제작된 골드 랜덤 디펜스 봇입니다.\n이 봇은 원작자의 요청에 따라 언제든 서비스가 중단될 수 있습니다.", inline = False)
+    embed.add_field(name = "서비스 내용", value = "매일 0시에 무작위 골드 문제를 받아보세요!\n가입까지 하신다면 골드 문제 스트릭 체킹 기능과 문제를 풀 때마다 봇 내에서의 재화인 **골드**를 얻으실 수 있습니다!", inline = False)
     embed.add_field(name = "제작자", value = "[@moomin_dev](https://github.com/mini2317)", inline = False)
     await ctx.send(embed = embed)
 
 @bot.command(name = "초대링크")
 async def 초대링크(ctx, *arg):
     embed = discord.Embed(title = f"초대링크 <:goldQuestion:1234746108362756137>", color = GOLD_COLOR)
-    embed.add_field(name = "감사의 말", value = "잘 이용해주셔서 감사드립니다! <:fhbt:1159345785528385606>", inline = False)
+    embed.add_field(name = "감사의 말", value = "이용해주셔서 감사드립니다! <:fhbt:1159345785528385606>", inline = False)
     embed.add_field(name = "초대링크", value = "https://discord.com/oauth2/authorize?client_id=1217056704101875722&permissions=3072&scope=bot", inline = False)
     await ctx.send(embed = embed)
+
+@bot.command(name = "문의")
+async def 문의(ctx, *arg):
+    text = ' '.join(arg)
+    embed = discord.Embed(title = f"문의", color = GOLD_COLOR)
+    embed.add_field(name = "문의내용", value = f"```{text}```", inline = False)
+    await ctx.send(embed = embed)
+    embed.add_field(name = "문의자 정보", value = f"```{ctx.author.name} ({ctx.author.id})```", inline = False)
+    await bot.get_guild(INQUIRY_SERVER).get_channel(INQUIRY_CHANNEL).send(embed = embed)
+    adminMention = ""
+    for adminId in BOT_ADMINS_ID:
+        adminMention += f'{bot.get_user(adminId).mention} '
+    await bot.get_guild(INQUIRY_SERVER).get_channel(INQUIRY_CHANNEL).send(adminMention)
 
 @bot.command(name = "가입")
 async def 가입(ctx, *arg):
@@ -330,7 +343,7 @@ async def 가입(ctx, *arg):
             return
         embed = discord.Embed(
             title = f"🔔 가입 🔔",
-            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다!\n본인 핸들이라는 것에 대해 별다른 인증은 필요 없으나, 공부를 위한 봇인만큼 본인 핸들을 이용해주시면 좋겠습니다!",
+            description = "가입하시면 스트릭 체크, 골드 저장 등의 기능을 이용하실 수 있습니다.\n본인 핸들이라는 것에 대해 별다른 인증은 필요 없으나, 공부를 위한 봇이니 본인 핸들을 이용해주시길 바랍니다.",
             color = GOLD_COLOR
         )
         await ctx.send(embed = embed, view = RegisterUser(ctx, arg))
